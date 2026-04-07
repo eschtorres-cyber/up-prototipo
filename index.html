@@ -1157,29 +1157,36 @@ body {
     </div>
   </div>
 
-  <!-- ▓▓▓ S5b — AJUSTAR OBJETIVO (onboarding) ▓▓▓ -->
+  <!-- ▓▓▓ S5b — DEFINIR / AJUSTAR OBJETIVO ▓▓▓ -->
   <div class="screen" id="s5b">
     <div class="status-bar">
       <span class="status-time">9:41</span>
       <div class="status-icons"><svg width="17" height="12" fill="white" viewBox="0 0 17 12"><rect x="0" y="3" width="3" height="9" rx="1" opacity="0.4"/><rect x="4.5" y="2" width="3" height="10" rx="1" opacity="0.6"/><rect x="9" y="0" width="3" height="12" rx="1" opacity="0.8"/><rect x="13.5" y="0" width="3" height="12" rx="1"/></svg></div>
     </div>
     <div class="scroll-content" style="padding:0 24px 140px;">
-      <!-- Header — task flow: sin breadcrumb verde -->
+      <!-- Header dinámico según contexto -->
       <div class="flow-header">
-        <button class="flow-back-btn" onclick="goTo('s5')">
+        <button id="s5b-back-btn" class="flow-back-btn" onclick="goTo('s3')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <p style="font-size:15px;font-weight:600;color:var(--text-primary);flex:1;">Ajustar objetivo</p>
+        <p id="s5b-header-label" style="font-size:15px;font-weight:600;color:var(--text-primary);flex:1;">Tu norte</p>
       </div>
-      <!-- H1 todo blanco -->
-      <h1 style="font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.1;color:var(--text-primary);margin-bottom:12px;">¿Cómo querés ajustarlo?</h1>
-      <p style="font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:28px;">Refina tu visión estratégica para este trimestre. La inteligencia de carrera se basa en la precisión de tus metas.</p>
+      <!-- H1 dinámico -->
+      <h1 id="s5b-title" style="font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.1;color:var(--text-primary);margin-bottom:12px;">Definí tu norte.</h1>
+      <p id="s5b-subtitle" style="font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:28px;">Escribí tu objetivo o idea. Cuando tengas algo, UP puede ayudarte a construir los hitos para llegar.</p>
 
       <!-- Meta principal -->
-      <p class="section-label" style="margin-bottom:10px;">Meta principal</p>
-      <div class="card-l1" style="margin-bottom:24px;padding:14px 16px;">
-        <textarea id="s5b-norte-textarea" style="width:100%;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:500;color:var(--text-primary);outline:none;resize:none;line-height:1.5;caret-color:var(--accent);" rows="3">Pasar de ejecutor a gestión estratégica de recursos.</textarea>
+      <p class="section-label" style="margin-bottom:10px;">¿A dónde querés llegar?</p>
+      <div class="card-l1" style="margin-bottom:8px;padding:14px 16px;">
+        <textarea id="s5b-norte-textarea" oninput="checkS5bField()" style="width:100%;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:500;color:var(--text-primary);outline:none;resize:none;line-height:1.5;caret-color:var(--accent);" rows="3" placeholder="Ej: Quiero pasar a un rol de liderazgo..."></textarea>
       </div>
+
+      <!-- CTA de IA — deshabilitado hasta que el usuario escribe -->
+      <button id="s5b-up-btn" disabled onclick="upSuggestS5b(this)"
+        style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:var(--surface-2);border:1px solid var(--border-default);border-radius:var(--r-lg);color:var(--text-secondary);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:not-allowed;margin-bottom:28px;transition:all 220ms ease;opacity:0.45;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <span id="s5b-up-label">Mejorar con UP</span>
+      </button>
 
       <!-- Horizonte temporal -->
       <p class="section-label" style="margin-bottom:10px;">Horizonte temporal</p>
@@ -1190,10 +1197,10 @@ body {
         <button class="horizon-pill" onclick="selectHorizon(this)">1 año</button>
       </div>
 
-      <!-- Retos propuestos -->
+      <!-- Hitos -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <p class="section-label" style="margin-bottom:0;">Retos propuestos</p>
-        <button style="font-size:13px;color:var(--accent);background:none;border:none;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;padding:0;" onclick="addHitoRow('hitos-ajustar-container')">+ Añadir hito</button>
+        <p class="section-label" style="margin-bottom:0;">Hitos hacia tu norte</p>
+        <button style="font-size:13px;color:var(--accent);background:none;border:none;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;padding:0;" onclick="addHitoRow('hitos-ajustar-container')">+ Añadir</button>
       </div>
       <div class="card-l1" id="hitos-ajustar-container" style="padding:0;margin-bottom:24px;">
         <div class="hito-drag-row">
@@ -1215,8 +1222,8 @@ body {
     </div>
     <!-- Fixed bottom -->
     <div class="fixed-bottom over-content">
-      <button class="btn-primary has-glow" onclick="confirmarNorte()">Confirmar mi norte</button>
-      <button class="btn-text" onclick="goTo('s5')">Cancelar</button>
+      <button id="s5b-confirmar-btn" class="btn-primary has-glow" disabled style="opacity:0.45;cursor:not-allowed;" onclick="confirmarNorte()">Confirmar mi norte</button>
+      <button class="btn-text" id="s5b-cancel-btn" onclick="goTo('s3')">Volver</button>
     </div>
   </div>
 
@@ -1841,10 +1848,24 @@ async function checkProfileAndRoute() {
       goTo('s6');
       loadAppData();
     } else {
-      // Tiene norte pero sin hitos → ir a S5b para definir hitos
-      // Pre-llenar la textarea con el norte guardado
+      // Tiene norte pero sin hitos → onboarding incompleto, ir a S5b
+      // Pre-llenar con el norte guardado
       const s5bTextarea = document.getElementById('s5b-norte-textarea');
-      if (s5bTextarea) s5bTextarea.value = profile.norte;
+      if (s5bTextarea) {
+        s5bTextarea.value = profile.norte;
+        checkS5bField(); // activar botones si hay contenido
+      }
+      // Contexto: onboarding (no ajuste)
+      const headerLabel = document.getElementById('s5b-header-label');
+      const title       = document.getElementById('s5b-title');
+      const subtitle    = document.getElementById('s5b-subtitle');
+      const backBtn     = document.getElementById('s5b-back-btn');
+      const cancelBtn   = document.getElementById('s5b-cancel-btn');
+      if (headerLabel) headerLabel.textContent = 'Tu norte';
+      if (title)       title.textContent       = 'Definí tu norte.';
+      if (subtitle)    subtitle.textContent    = 'Escribí tu objetivo. UP puede ayudarte a construir los hitos para llegar.';
+      if (backBtn)     backBtn.setAttribute('onclick', "goTo('s3')");
+      if (cancelBtn)   cancelBtn.setAttribute('onclick', "goTo('s3')");
       goTo('s5b');
     }
   } else {
@@ -2028,6 +2049,103 @@ async function loadAppData() {
     if (fechaEl && r.semana) fechaEl.textContent = `${r.semana} · ${countAvances} avances`;
     cardResumen.style.display = 'block';
   }
+}
+
+// ── S5b: activar botones cuando hay contenido ────────
+function checkS5bField() {
+  const val = document.getElementById('s5b-norte-textarea')?.value?.trim() || '';
+  const hasContent = val.length >= 8;
+
+  const upBtn       = document.getElementById('s5b-up-btn');
+  const confirmarBtn = document.getElementById('s5b-confirmar-btn');
+
+  if (upBtn) {
+    upBtn.disabled          = !hasContent;
+    upBtn.style.opacity     = hasContent ? '1' : '0.45';
+    upBtn.style.cursor      = hasContent ? 'pointer' : 'not-allowed';
+    upBtn.style.color       = hasContent ? 'var(--accent)' : 'var(--text-secondary)';
+    upBtn.style.borderColor = hasContent ? 'rgba(22,163,74,0.4)' : 'var(--border-default)';
+    upBtn.style.background  = hasContent ? 'rgba(22,163,74,0.07)' : 'var(--surface-2)';
+  }
+  if (confirmarBtn) {
+    confirmarBtn.disabled      = !hasContent;
+    confirmarBtn.style.opacity = hasContent ? '1' : '0.45';
+    confirmarBtn.style.cursor  = hasContent ? 'pointer' : 'not-allowed';
+  }
+}
+
+// ── S5b: Gemini mejora objetivo y propone hitos ───────
+function upSuggestS5b(btn) {
+  const textarea = document.getElementById('s5b-norte-textarea');
+  const objetivo = textarea?.value?.trim();
+  if (!objetivo) return;
+
+  const hito01   = document.getElementById('hito01');
+  const hito02   = document.getElementById('hito02');
+  const hito03   = document.getElementById('hito03');
+  const hito03row = document.getElementById('hito03row');
+  const label    = document.getElementById('s5b-up-label');
+
+  // Estado de carga
+  if (btn)   { btn.disabled = true; btn.style.opacity = '0.7'; }
+  if (label) label.textContent = '✦ UP está pensando...';
+  if (hito01) hito01.value = '';
+  if (hito02) hito02.value = '';
+  if (hito03) hito03.value = '';
+
+  const horizonte = document.querySelector('#s5b .horizon-pill.active')?.textContent?.trim() || '3 meses';
+
+  (async () => {
+    try {
+      const profile = currentUser
+        ? (await supa.from('profiles').select('role').eq('id', currentUser.id).single()).data
+        : null;
+
+      const res = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipo: 'mejorar_norte',
+          datos: { objetivo, rol: profile?.role, horizonte }
+        })
+      });
+
+      if (!res.ok) throw new Error('API error');
+      const { resultado } = await res.json();
+
+      // resultado puede llegar como objeto (ya parseado por el servidor) o string
+      const parsed = typeof resultado === 'object' ? resultado
+                   : (() => { try { return JSON.parse(resultado); } catch { return null; } })();
+
+      if (parsed?.objetivo) {
+        typeWriterField(textarea, parsed.objetivo, 14, () => {
+          if (hito01 && parsed.hitos?.[0]) typeWriterField(hito01, parsed.hitos[0], 12, () => {
+            if (hito02 && parsed.hitos?.[1]) typeWriterField(hito02, parsed.hitos[1], 12, () => {
+              if (hito03 && parsed.hitos?.[2]) {
+                if (hito03row) hito03row.style.display = 'flex';
+                typeWriterField(hito03, parsed.hitos[2], 12, () => {
+                  if (btn)   { btn.disabled = false; btn.style.opacity = '1'; }
+                  if (label) label.textContent = 'Mejorar con UP';
+                  checkS5bField();
+                });
+              } else {
+                if (btn)   { btn.disabled = false; btn.style.opacity = '1'; }
+                if (label) label.textContent = 'Mejorar con UP';
+                checkS5bField();
+              }
+            });
+          });
+        });
+      } else {
+        throw new Error('formato inesperado');
+      }
+
+    } catch {
+      if (btn)   { btn.disabled = false; btn.style.opacity = '1'; }
+      if (label) label.textContent = 'Mejorar con UP';
+      showToast('UP IA no está disponible ahora. Podés escribir tus hitos directamente.');
+    }
+  })();
 }
 
 // ── S2: guardar nombre + rol → ir a S3 ───────────────
