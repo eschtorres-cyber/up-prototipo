@@ -910,8 +910,8 @@ body {
 
 <div class="phone" id="phone">
 
-  <!-- ▓▓▓ S0 — GOOGLE SIGN IN ▓▓▓ -->
-  <div class="screen active" id="s0">
+  <!-- ▓▓▓ S0 — GOOGLE SIGN IN (desactivado, reemplazado por S1) ▓▓▓ -->
+  <div class="screen" id="s0">
     <!-- Fondo oscuro con glow sutil -->
     <div style="position:absolute;inset:0;background:var(--bg-base);overflow:hidden;">
       <div style="position:absolute;top:35%;left:50%;transform:translateX(-50%);width:320px;height:220px;background:rgba(22,163,74,0.07);border-radius:50%;filter:blur(60px);pointer-events:none;"></div>
@@ -988,8 +988,8 @@ body {
     </div>
   </div>
 
-  <!-- ▓▓▓ S1 — WELCOME ▓▓▓ -->
-  <div class="screen" id="s1">
+  <!-- ▓▓▓ S1 — WELCOME + LOGIN ▓▓▓ -->
+  <div class="screen active" id="s1">
     <!-- Fondo atmosférico: capas CSS para profundidad cinematográfica -->
     <div style="position:absolute;inset:0;overflow:hidden;">
       <div style="position:absolute;inset:0;background:#020503;"></div>
@@ -1024,8 +1024,8 @@ body {
     </div>
     <div class="s1-cta" style="position:relative;z-index:5;padding:0 24px 52px;display:flex;flex-direction:column;gap:12px;">
       <div class="accent-glow-bg"></div>
-      <button class="btn-primary has-glow" onclick="goTo('s2')">Continuar con Google</button>
-      <button class="btn-ghost" onclick="goTo('s2')">Continuar con LinkedIn</button>
+      <button class="btn-primary has-glow" onclick="handleGoogleSignIn()">Continuar con Google</button>
+      <button class="btn-ghost" onclick="handleGoogleSignIn()">Continuar con LinkedIn</button>
     </div>
   </div>
 
@@ -1836,7 +1836,7 @@ body {
 </div>
 
 <script>
-let currentScreen = 's0';
+let currentScreen = 's1';
 
 // ── SUPABASE ─────────────────────────────────────────
 const SUPA_URL = 'https://bewaxdubytxnpkwegsma.supabase.co';
