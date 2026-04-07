@@ -1272,7 +1272,7 @@ body {
         </div>
         <p style="font-size:15px;font-weight:600;line-height:1.4;color:var(--text-primary);">Tu semana fue de avance. UP detectó 3 señales claras hacia tu norte.</p>
         <div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;">
-          <span style="font-size:12px;color:var(--text-secondary);">31 mar – 6 abr · 5 entradas</span>
+          <span id="resumen-card-fecha" style="font-size:12px;color:var(--text-secondary);">—</span>
           <span style="font-size:12px;color:var(--accent);font-weight:600;">Ver resumen →</span>
         </div>
       </div>
@@ -1316,7 +1316,7 @@ body {
       <div class="card-l2" style="border-color:rgba(22,163,74,0.18);margin-bottom:20px;">
         <!-- Header: chip + progress arc -->
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">
-          <span style="font-size:12px;color:var(--text-secondary);background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.10);border-radius:6px;padding:4px 10px;">Q3 2026</span>
+          <span id="norte-horizonte-chip" style="font-size:12px;color:var(--text-secondary);background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.10);border-radius:6px;padding:4px 10px;">—</span>
           <!-- Arc progress 33% (1 de 3 hitos) -->
           <div style="position:relative;width:52px;height:52px;flex-shrink:0;">
             <svg width="52" height="52" viewBox="0 0 52 52" style="transform:rotate(-90deg);">
@@ -1502,17 +1502,17 @@ body {
       <!-- Stats principales -->
       <div style="display:flex;gap:0;margin-bottom:28px;">
         <div style="flex:1;text-align:center;">
-          <p style="font-size:30px;font-weight:700;color:var(--text-primary);line-height:1;letter-spacing:-0.02em;">84</p>
+          <p id="stat-dias" style="font-size:30px;font-weight:700;color:var(--text-primary);line-height:1;letter-spacing:-0.02em;">0</p>
           <p style="font-size:11px;color:var(--text-secondary);margin-top:4px;">Días activos</p>
         </div>
         <div style="width:1px;background:var(--border-subtle);margin:4px 0;"></div>
         <div style="flex:1;text-align:center;">
-          <p style="font-size:30px;font-weight:700;color:var(--text-primary);line-height:1;letter-spacing:-0.02em;">47K</p>
+          <p id="stat-palabras" style="font-size:30px;font-weight:700;color:var(--text-primary);line-height:1;letter-spacing:-0.02em;">0</p>
           <p style="font-size:11px;color:var(--text-secondary);margin-top:4px;">Palabras</p>
         </div>
         <div style="width:1px;background:var(--border-subtle);margin:4px 0;"></div>
         <div style="flex:1;text-align:center;">
-          <p style="font-size:30px;font-weight:700;color:var(--accent);line-height:1;letter-spacing:-0.02em;">295</p>
+          <p id="stat-entradas" style="font-size:30px;font-weight:700;color:var(--accent);line-height:1;letter-spacing:-0.02em;">0</p>
           <p style="font-size:11px;color:var(--text-secondary);margin-top:4px;">Entradas</p>
         </div>
       </div>
@@ -1568,22 +1568,8 @@ body {
         <p class="section-label" style="margin-bottom:0;">Entradas recientes</p>
         <button onclick="switchTab('diario')" style="background:none;border:none;color:var(--accent);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:0;">Ver todo →</button>
       </div>
-      <div>
-        <div class="entry-card">
-          <p style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">Hoy · 9:38</p>
-          <p style="font-size:14px;color:var(--text-primary);line-height:1.5;">Lideré la retro del sprint. El equipo fue honesto sobre los bloqueos y salimos con 3 acciones claras.</p>
-          <div class="entry-tags"><span class="entry-tag">Tracción</span><span class="entry-tag neutral">Liderazgo</span></div>
-        </div>
-        <div class="entry-card">
-          <p style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">Ayer · 19:12</p>
-          <p style="font-size:14px;color:var(--text-primary);line-height:1.5;">Workshop con Product: definimos el roadmap Q3. Me sentí escuchada por primera vez en semanas.</p>
-          <div class="entry-tags"><span class="entry-tag">Crecimiento</span><span class="entry-tag neutral">Producto</span></div>
-        </div>
-        <div class="entry-card">
-          <p style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">Hace 3 días · 21:05</p>
-          <p style="font-size:14px;color:var(--text-primary);line-height:1.5;">Propuse cambio de proceso que ahorraría 2h semanales al equipo. Dirección lo tomó bien.</p>
-          <div class="entry-tags"><span class="entry-tag neutral">Iniciativa</span><span class="entry-tag neutral">Proceso</span></div>
-        </div>
+      <div id="entradas-recientes-container">
+        <p style="font-size:14px;color:var(--text-secondary);padding:16px 0;text-align:center;">Cargando entradas...</p>
       </div>
     </div>
 
@@ -1603,42 +1589,19 @@ body {
       <!-- Stats -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
         <div class="card-l1" style="text-align:center;padding:18px 12px;">
-          <p style="font-size:26px;font-weight:700;color:var(--text-primary);line-height:1;letter-spacing:-0.02em;">94<span style="font-size:14px;color:var(--text-secondary);font-weight:400;">/180</span></p>
+          <p id="stat-racha" style="font-size:26px;font-weight:700;color:var(--text-primary);line-height:1;letter-spacing:-0.02em;">0</p>
           <p style="font-size:11px;color:var(--text-secondary);margin-top:5px;">Días de racha</p>
         </div>
         <div class="card-l1" style="text-align:center;padding:18px 12px;">
-          <p style="font-size:26px;font-weight:700;color:var(--accent);line-height:1;letter-spacing:-0.02em;">12.4k</p>
+          <p id="stat-palabras-perfil" style="font-size:26px;font-weight:700;color:var(--accent);line-height:1;letter-spacing:-0.02em;">0</p>
           <p style="font-size:11px;color:var(--text-secondary);margin-top:5px;">Palabras registradas</p>
         </div>
       </div>
 
       <!-- Logros guardados -->
       <p class="section-label" style="margin-bottom:12px;">Logros Guardados</p>
-      <div class="card-l1" style="padding:0;margin-bottom:24px;">
-        <div class="logro-item" style="cursor:pointer;-webkit-tap-highlight-color:transparent;" onclick="openLogroSheet('Arquitectura de Microservicios','Has aplicado patrones de microservicios en producción con impacto medible en escalabilidad. Este logro fue referenciado 4 veces este mes en síntesis de UP.')">
-          <div class="logro-dot"></div>
-          <div style="flex:1;">
-            <p style="font-size:14px;color:var(--text-primary);font-weight:500;">Arquitectura de Microservicios</p>
-            <p style="font-size:12px;color:var(--text-secondary);margin-top:2px;">Referenciado 4 veces este mes</p>
-          </div>
-          <span style="font-size:12px;color:var(--accent);font-weight:600;">↑47%</span>
-        </div>
-        <div class="logro-item" style="cursor:pointer;-webkit-tap-highlight-color:transparent;" onclick="openLogroSheet('Liderazgo de Iniciativas','Lideraste una iniciativa de punta a punta este trimestre. UP detectó este patrón en 3 entradas de diario y lo consolidó como logro de liderazgo ejecutivo.')">
-          <div class="logro-dot"></div>
-          <div style="flex:1;">
-            <p style="font-size:14px;color:var(--text-primary);font-weight:500;">Liderazgo de Iniciativas</p>
-            <p style="font-size:12px;color:var(--text-secondary);margin-top:2px;">Hito completado esta semana</p>
-          </div>
-          <span style="font-size:12px;color:var(--accent);font-weight:600;">↑12%</span>
-        </div>
-        <div class="logro-item" style="cursor:pointer;-webkit-tap-highlight-color:transparent;" onclick="openLogroSheet('Comunicación Estratégica','Estás construyendo este logro. UP identificó momentos de comunicación efectiva con stakeholders. Seguí registrando para consolidarlo.')">
-          <div class="logro-dot" style="background:rgba(255,255,255,0.25);"></div>
-          <div style="flex:1;">
-            <p style="font-size:14px;color:var(--text-primary);font-weight:500;">Comunicación Estratégica</p>
-            <p style="font-size:12px;color:var(--text-secondary);margin-top:2px;">En desarrollo</p>
-          </div>
-          <span style="font-size:12px;color:var(--text-secondary);font-weight:500;">→</span>
-        </div>
+      <div id="logros-container" class="card-l1" style="padding:16px;margin-bottom:24px;">
+        <p style="font-size:14px;color:var(--text-secondary);text-align:center;">Cargando logros...</p>
       </div>
 
       <button id="btn-exportar" style="width:100%;padding:16px;background:rgba(22,163,74,0.08);border:1px solid rgba(22,163,74,0.20);border-radius:var(--r-lg);color:var(--accent);font-size:15px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 300ms ease;" onclick="exportarInteligencia(this)">
@@ -1743,7 +1706,7 @@ body {
     <div class="bottom-sheet-overlay" id="resumen-overlay" onclick="closeResumenSheet()"></div>
     <div class="bottom-sheet" id="resumen-sheet">
       <div class="sheet-handle"></div>
-      <p style="font-size:11px;font-weight:600;color:var(--text-secondary);letter-spacing:0.06em;margin-bottom:8px;">SEMANA DEL 31 MAR – 6 ABR</p>
+      <p id="resumen-semana-label" style="font-size:11px;font-weight:600;color:var(--text-secondary);letter-spacing:0.06em;margin-bottom:8px;">CARGANDO SEMANA...</p>
       <div class="ai-label" style="margin-bottom:20px;">
         <div class="spark-dot"></div>
         UP sintetizó tu semana.
@@ -1751,39 +1714,21 @@ body {
 
       <!-- Lo que avanzaste -->
       <p style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:0.08em;margin-bottom:12px;">LO QUE AVANZASTE</p>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
-        <div style="display:flex;align-items:flex-start;gap:10px;">
-          <div style="width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px;"></div>
-          <p style="font-size:14px;color:var(--text-primary);line-height:1.55;">Lideraste dos espacios de equipo y generaste acuerdos accionables. El patrón de liderazgo se consolida.</p>
-        </div>
-        <div style="display:flex;align-items:flex-start;gap:10px;">
-          <div style="width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px;"></div>
-          <p style="font-size:14px;color:var(--text-primary);line-height:1.55;">Propusiste una mejora de proceso con impacto real. Iniciativa propia, sin que te lo pidieran.</p>
-        </div>
-        <div style="display:flex;align-items:flex-start;gap:10px;">
-          <div style="width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px;"></div>
-          <p style="font-size:14px;color:var(--text-primary);line-height:1.55;">Desbloqueaste un problema técnico del equipo. Lideraste desde la acción, no desde el rol.</p>
-        </div>
+      <div id="resumen-avances-container" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+        <p style="font-size:14px;color:var(--text-secondary);">Cargando...</p>
       </div>
 
       <div style="height:1px;background:rgba(255,255,255,0.07);margin-bottom:20px;"></div>
 
       <!-- Para llevar -->
       <p style="font-size:11px;font-weight:700;color:var(--text-label);letter-spacing:0.08em;margin-bottom:12px;">PARA LLEVAR ESTA SEMANA</p>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
-        <div style="display:flex;align-items:flex-start;gap:10px;">
-          <span style="font-size:13px;color:var(--accent);flex-shrink:0;margin-top:1px;">↗</span>
-          <p style="font-size:14px;color:var(--text-primary);line-height:1.55;">Las presentaciones ante stakeholders son tu próximo punto de crecimiento. Preparate con estructura antes de entrar.</p>
-        </div>
-        <div style="display:flex;align-items:flex-start;gap:10px;">
-          <span style="font-size:13px;color:var(--accent);flex-shrink:0;margin-top:1px;">↗</span>
-          <p style="font-size:14px;color:var(--text-primary);line-height:1.55;">Cerrá el hito 02: feedback estructurado al equipo. Ya lo hacés intuitivamente — formalizalo esta semana.</p>
-        </div>
+      <div id="resumen-parallevar-container" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+        <p style="font-size:14px;color:var(--text-secondary);">Cargando...</p>
       </div>
 
       <!-- Intención -->
       <div style="background:rgba(22,163,74,0.07);border:1px solid rgba(22,163,74,0.15);border-radius:var(--r-md);padding:16px;margin-bottom:20px;">
-        <p style="font-size:13px;font-weight:500;font-style:italic;color:var(--text-primary);line-height:1.65;">"Esta semana, consolidá lo que iniciaste. Liderás mejor cuando te das permiso de decidir sin pedir validación."</p>
+        <p id="resumen-intencion-text" style="font-size:13px;font-weight:500;font-style:italic;color:var(--text-primary);line-height:1.65;">""</p>
         <p style="font-size:11px;color:var(--accent);margin-top:8px;font-weight:600;">— Intención de la semana · UP</p>
       </div>
 
@@ -2014,6 +1959,12 @@ async function loadAppData() {
     norteObjetivoText.textContent = profile.norte;
   }
 
+  // Chip de horizonte (Q3 2026 calculado desde horizonte real)
+  const chipHorizonte = document.getElementById('norte-horizonte-chip');
+  if (chipHorizonte) {
+    chipHorizonte.textContent = calcularHorizonteChip(profile.horizonte);
+  }
+
   // 2. Cargar hitos
   const { data: hitos } = await supa
     .from('hitos')
@@ -2059,7 +2010,7 @@ async function loadAppData() {
   // 3. Mostrar resumen semanal solo si hay resumenes reales
   const { data: resumenes } = await supa
     .from('resumenes')
-    .select('id, semana, intencion')
+    .select('id, semana, intencion, avances')
     .eq('user_id', currentUser.id)
     .order('semana', { ascending: false })
     .limit(1);
@@ -2067,8 +2018,14 @@ async function loadAppData() {
   const cardResumen = document.getElementById('card-resumen-semanal');
   if (cardResumen && resumenes && resumenes.length > 0) {
     const r = resumenes[0];
+    // Texto de la card
     const textoResumen = r.intencion || 'Tu semana tiene avances registrados.';
-    cardResumen.querySelector('p').textContent = textoResumen;
+    const pEl = cardResumen.querySelector('p');
+    if (pEl) pEl.textContent = textoResumen;
+    // Fecha dinámica con conteo de avances
+    const fechaEl = document.getElementById('resumen-card-fecha');
+    const countAvances = Array.isArray(r.avances) ? r.avances.length : 0;
+    if (fechaEl && r.semana) fechaEl.textContent = `${r.semana} · ${countAvances} avances`;
     cardResumen.style.display = 'block';
   }
 }
@@ -2237,21 +2194,26 @@ async function openSynthesisSheet() {
     });
     const { resultado } = await res.json();
     outputEl.textContent = '';
-    setTimeout(() => typeWriter(resultado || synthText, outputEl), 200);
+    setTimeout(() => typeWriter(resultado, outputEl), 200);
 
     // Guardar entrada + síntesis en Supabase
     if (currentUser) {
       const tags = Array.from(document.querySelectorAll('#panel-home .chip.active')).map(c => c.textContent.trim());
       await guardarEntrada(txt, tags);
-      // Actualizar síntesis en la última entrada guardada
       const { data: ultima } = await supa.from('entradas')
         .select('id').eq('user_id', currentUser.id)
         .order('created_at', { ascending: false }).limit(1).single();
       if (ultima) await supa.from('entradas').update({ sintesis_up: resultado }).eq('id', ultima.id);
     }
   } catch {
+    // Guardar la entrada igual, aunque Gemini falle
+    if (currentUser) {
+      const tags = Array.from(document.querySelectorAll('#panel-home .chip.active')).map(c => c.textContent.trim());
+      await guardarEntrada(txt, tags);
+    }
     outputEl.textContent = '';
-    setTimeout(() => typeWriter(synthText, outputEl), 200);
+    outputEl.style.color = 'var(--text-secondary)';
+    outputEl.textContent = 'La síntesis de UP no está disponible ahora. Tu entrada se guardó igual. Intentá de nuevo más tarde.';
   }
 }
 
@@ -2365,6 +2327,133 @@ function switchTab(name) {
 
   // Norte: animate arc drawing from 0 to real value
   if (name === 'norte') setTimeout(animateNorteArc, 180);
+
+  // Cargar datos dinámicos por panel
+  if (name === 'evolucion') loadEvolucionData();
+  if (name === 'perfil')    loadPerfilData();
+}
+
+// ── Helpers de fecha ─────────────────────────────────
+function formatFechaRelativa(dateStr) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diffDays = Math.floor((now - d) / 86400000);
+  const hhmm = d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+  if (diffDays === 0) return `Hoy · ${hhmm}`;
+  if (diffDays === 1) return `Ayer · ${hhmm}`;
+  return `Hace ${diffDays} días · ${hhmm}`;
+}
+
+function calcularHorizonteChip(horizonte) {
+  if (!horizonte) return '—';
+  const meses = { '1 mes': 1, '3 meses': 3, '6 meses': 6, '1 año': 12 };
+  const m = meses[horizonte] || 3;
+  const target = new Date();
+  target.setMonth(target.getMonth() + m);
+  const q = Math.ceil((target.getMonth() + 1) / 3);
+  return `Q${q} ${target.getFullYear()}`;
+}
+
+function contarPalabras(entradas) {
+  const total = entradas.reduce((acc, e) => acc + (e.texto || '').split(/\s+/).filter(Boolean).length, 0);
+  return total >= 1000 ? (total / 1000).toFixed(1) + 'K' : String(total);
+}
+
+function calcularDiasActivos(entradas) {
+  const fechas = new Set(entradas.map(e => (e.created_at || '').slice(0, 10)));
+  return fechas.size;
+}
+
+// ── Cargar datos del panel Evolución ─────────────────
+async function loadEvolucionData() {
+  if (!currentUser) return;
+
+  const { data: entradas } = await supa
+    .from('entradas')
+    .select('id, texto, tags, created_at')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false });
+
+  const lista = entradas || [];
+
+  // Stats
+  const dias = calcularDiasActivos(lista);
+  const palabras = contarPalabras(lista);
+  const total = lista.length;
+
+  const elDias     = document.getElementById('stat-dias');
+  const elPalabras = document.getElementById('stat-palabras');
+  const elEntradas = document.getElementById('stat-entradas');
+  if (elDias)     elDias.textContent     = dias;
+  if (elPalabras) elPalabras.textContent = palabras;
+  if (elEntradas) elEntradas.textContent = total;
+
+  // Entradas recientes
+  const container = document.getElementById('entradas-recientes-container');
+  if (container) {
+    if (lista.length === 0) {
+      container.innerHTML = `
+        <div style="padding:24px 0;text-align:center;">
+          <p style="font-size:14px;color:var(--text-secondary);margin-bottom:12px;">Todavía no tenés entradas.</p>
+          <button onclick="switchTab('home')" style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--accent);background:none;border:1px solid rgba(22,163,74,0.3);border-radius:var(--r-full);padding:8px 20px;cursor:pointer;">Escribir primera entrada →</button>
+        </div>`;
+    } else {
+      container.innerHTML = lista.slice(0, 3).map(e => {
+        const tags = (e.tags || []).map(t => `<span class="entry-tag">${t}</span>`).join('');
+        return `
+          <div class="entry-card">
+            <p style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">${formatFechaRelativa(e.created_at)}</p>
+            <p style="font-size:14px;color:var(--text-primary);line-height:1.5;">${e.texto}</p>
+            ${tags ? `<div class="entry-tags">${tags}</div>` : ''}
+          </div>`;
+      }).join('');
+    }
+  }
+}
+
+// ── Cargar datos del panel Perfil ─────────────────────
+async function loadPerfilData() {
+  if (!currentUser) return;
+
+  // Cargar entradas para stats
+  const { data: entradas } = await supa
+    .from('entradas')
+    .select('id, texto, created_at')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false });
+
+  const lista = entradas || [];
+  const palabras = contarPalabras(lista);
+  const racha = calcularDiasActivos(lista);
+
+  const elRacha   = document.getElementById('stat-racha');
+  const elPalab   = document.getElementById('stat-palabras-perfil');
+  if (elRacha) elRacha.textContent = racha;
+  if (elPalab) elPalab.textContent = palabras;
+
+  // Cargar logros
+  const { data: logros } = await supa
+    .from('logros')
+    .select('id, titulo, descripcion')
+    .eq('user_id', currentUser.id);
+
+  const container = document.getElementById('logros-container');
+  if (container) {
+    if (!logros || logros.length === 0) {
+      container.innerHTML = `
+        <p style="font-size:14px;color:var(--text-secondary);text-align:center;padding:8px 0;">UP detectará tus logros a medida que registrés entradas.</p>`;
+    } else {
+      container.style.padding = '0';
+      container.innerHTML = logros.map(l => `
+        <div class="logro-item" style="cursor:pointer;-webkit-tap-highlight-color:transparent;" onclick="openLogroSheet('${l.titulo.replace(/'/g,"\\'")}','${l.descripcion.replace(/'/g,"\\'")}')">
+          <div class="logro-dot"></div>
+          <div style="flex:1;">
+            <p style="font-size:14px;color:var(--text-primary);font-weight:500;">${l.titulo}</p>
+          </div>
+          <span style="font-size:14px;color:var(--accent);">→</span>
+        </div>`).join('');
+    }
+  }
 }
 
 // Sugerencias completas de UP: objetivo + horizonte + 3 hitos coherentes
@@ -2477,37 +2566,9 @@ function upSuggestObjetivo(btn) {
       }, 300);
 
     } catch {
-      // Fallback a sugerencias hardcoded
-      const pack = UP_SUGGESTIONS[Math.floor(Math.random() * UP_SUGGESTIONS.length)];
-      if (pillsContainer) {
-        pillsContainer.querySelectorAll('.horizon-pill').forEach(p => {
-          p.classList.toggle('active', p.textContent.trim() === pack.horizonte);
-        });
-      }
-      setTimeout(() => {
-        typeWriterField(objetivoInput, pack.objetivo, 16, () => {
-          setTimeout(() => {
-            if (hito01) typeWriterField(hito01, pack.hitos[0], 12, () => {
-
-              setTimeout(() => {
-                if (hito02) typeWriterField(hito02, pack.hitos[1], 12, () => {
-
-                  if (pack.hitos[2] && hito03row && hito03) {
-                    hito03row.style.display = 'flex';
-                    setTimeout(() => {
-                      typeWriterField(hito03, pack.hitos[2], 12, () => {
-                        resetUpBtn(btn, label, spark);
-                      });
-                    }, 120);
-                  } else {
-                    resetUpBtn(btn, label, spark);
-                  }
-                });
-              }, 120);
-            });
-          }, 120);
-        });
-      }, 400);
+      // Gemini no disponible — informar sin bloquear al usuario
+      resetUpBtn(btn, label, spark);
+      showToast('UP IA no está disponible ahora. Podés escribir tu objetivo directamente.');
     }
   })();
 }
@@ -2618,9 +2679,56 @@ function filterTag(el) {
 }
 
 // ── Resumen semanal — sheet ──────────────────────────
-function openResumenSheet() {
+async function openResumenSheet() {
   document.getElementById('resumen-overlay').classList.add('visible');
   document.getElementById('resumen-sheet').classList.add('open');
+
+  if (!currentUser) return;
+
+  // Cargar el resumen más reciente de Supabase
+  const { data: resumenes } = await supa
+    .from('resumenes')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('semana', { ascending: false })
+    .limit(1);
+
+  if (!resumenes || resumenes.length === 0) return;
+  const r = resumenes[0];
+
+  // Header de semana
+  const labelEl = document.getElementById('resumen-semana-label');
+  if (labelEl && r.semana) labelEl.textContent = `SEMANA DEL ${r.semana}`;
+
+  // Avances
+  const avancesEl = document.getElementById('resumen-avances-container');
+  if (avancesEl) {
+    const avances = Array.isArray(r.avances) ? r.avances : [];
+    avancesEl.innerHTML = avances.length > 0
+      ? avances.map(a => `
+          <div style="display:flex;align-items:flex-start;gap:10px;">
+            <div style="width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px;"></div>
+            <p style="font-size:14px;color:var(--text-primary);line-height:1.55;">${a}</p>
+          </div>`).join('')
+      : '<p style="font-size:14px;color:var(--text-secondary);">Sin avances registrados esta semana.</p>';
+  }
+
+  // Para llevar
+  const parallevarEl = document.getElementById('resumen-parallevar-container');
+  if (parallevarEl) {
+    const items = Array.isArray(r.para_llevar) ? r.para_llevar : [];
+    parallevarEl.innerHTML = items.length > 0
+      ? items.map(p => `
+          <div style="display:flex;align-items:flex-start;gap:10px;">
+            <span style="font-size:13px;color:var(--accent);flex-shrink:0;margin-top:1px;">↗</span>
+            <p style="font-size:14px;color:var(--text-primary);line-height:1.55;">${p}</p>
+          </div>`).join('')
+      : '<p style="font-size:14px;color:var(--text-secondary);">—</p>';
+  }
+
+  // Intención
+  const intencionEl = document.getElementById('resumen-intencion-text');
+  if (intencionEl && r.intencion) intencionEl.textContent = `"${r.intencion}"`;
 }
 function closeResumenSheet() {
   document.getElementById('resumen-overlay').classList.remove('visible');
