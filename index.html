@@ -1053,7 +1053,7 @@ body {
       </div>
     </div>
     <div class="fixed-bottom">
-      <button class="btn-primary" id="btn-s2" disabled onclick="goTo('s3')">Continuar</button>
+      <button class="btn-primary" id="btn-s2" disabled onclick="guardarS2()">Continuar</button>
     </div>
   </div>
 
@@ -1076,7 +1076,7 @@ body {
       </div>
     </div>
     <div class="fixed-bottom">
-      <button class="btn-primary has-glow" id="btn-s3" disabled onclick="showLoading()">Esto es mi norte</button>
+      <button class="btn-primary has-glow" id="btn-s3" disabled onclick="guardarS3()">Esto es mi norte</button>
       <button class="btn-text" onclick="goTo('s6')">Aún no lo tengo claro</button>
     </div>
   </div>
@@ -1152,7 +1152,7 @@ body {
       </div>
     </div>
     <div class="fixed-bottom over-content">
-      <button class="btn-primary has-glow" onclick="goTo('s6')">Confirmar mi norte</button>
+      <button class="btn-primary has-glow" onclick="confirmarNorte()">Confirmar mi norte</button>
       <button class="btn-ghost" style="height:52px;" onclick="goTo('s5b')">Ajustar propuesta</button>
     </div>
   </div>
@@ -1967,6 +1967,50 @@ async function guardarEntrada(texto, tags) {
 async function guardarPerfil(datos) {
   if (!currentUser) return;
   await supa.from('profiles').upsert({ id: currentUser.id, ...datos });
+}
+
+// ── S2: guardar nombre + rol → ir a S3 ───────────────
+async function guardarS2() {
+  const name = document.getElementById('input-name').value.trim();
+  const role = document.getElementById('input-role').value.trim();
+  await guardarPerfil({ name, role });
+  goTo('s3');
+}
+
+// ── S3: guardar norte → loading → S5 ─────────────────
+async function guardarS3() {
+  const norte = document.getElementById('input-objetivo').value.trim();
+  await guardarPerfil({ norte });
+  showLoading();
+}
+
+// ── S5: guardar hitos → ir al app ────────────────────
+async function confirmarNorte() {
+  if (!currentUser) { goTo('s6'); return; }
+
+  // Leer hitos de S5 (ajustar container)
+  const inputs = document.querySelectorAll('#hitos-ajustar-container input[type="text"]');
+  const hitos = Array.from(inputs)
+    .map((inp, i) => ({ texto: inp.value.trim(), orden: i, completado: false }))
+    .filter(h => h.texto.length > 0);
+
+  // Guardar cada hito
+  if (hitos.length > 0) {
+    await supa.from('hitos').delete().eq('user_id', currentUser.id);
+    await supa.from('hitos').insert(
+      hitos.map(h => ({ ...h, user_id: currentUser.id }))
+    );
+  }
+
+  // Horizonte
+  const horizonte = document.querySelector('.horizon-pill.active')?.textContent?.trim() || '3 meses';
+  await guardarPerfil({ horizonte });
+
+  // Actualizar nombre en greeting y entrar al app
+  const name = (await supa.from('profiles').select('name').eq('id', currentUser.id).single()).data?.name;
+  if (name) updateGreetingName(name.split(' ')[0]);
+
+  goTo('s6');
 }
 
 function goTo(id) {
