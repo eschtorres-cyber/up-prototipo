@@ -1286,10 +1286,10 @@ body {
         Tu norte
       </div>
       <div class="card-l2" style="border-color:rgba(22,163,74,0.22);background:rgba(22,163,74,0.05);">
-        <p style="font-size:15px;font-weight:600;line-height:1.4;color:var(--text-primary);margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">Pasar de ejecutora a gestión de equipos.</p>
+        <p id="home-norte-text" style="font-size:15px;font-weight:600;line-height:1.4;color:var(--text-primary);margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">Tu norte aparecerá acá.</p>
         <div style="border-top:1px solid var(--border-subtle);padding-top:12px;margin-bottom:14px;">
-          <p style="font-size:11px;font-weight:500;color:var(--text-label);margin-bottom:4px;">Esta semana</p>
-          <p style="font-size:14px;font-weight:500;color:var(--text-primary);line-height:1.4;">Liderar una iniciativa de punta a punta en el trimestre.</p>
+          <p style="font-size:11px;font-weight:500;color:var(--text-label);margin-bottom:4px;">Próximo hito</p>
+          <p id="home-hito-one" style="font-size:14px;font-weight:500;color:var(--text-primary);line-height:1.4;">Completá el onboarding para ver tus hitos.</p>
         </div>
         <div style="height:2px;background:rgba(255,255,255,0.08);border-radius:1px;overflow:hidden;">
           <div id="card-progress-bar" style="height:100%;width:0%;background:var(--accent);border-radius:1px;transition:width 1s var(--ease-out);"></div>
@@ -1328,24 +1328,14 @@ body {
           </div>
         </div>
         <!-- Título objetivo -->
-        <p style="font-size:16px;font-weight:600;line-height:1.4;color:var(--text-primary);margin-bottom:16px;">Pasar de ejecutora a gestión de equipos e iniciativas propias.</p>
+        <p id="norte-objetivo-text" style="font-size:16px;font-weight:600;line-height:1.4;color:var(--text-primary);margin-bottom:16px;">Cargando tu norte...</p>
         <!-- Hitos con checkbox de seguimiento (binario: hecho / pendiente) -->
-        <div class="hito-check-row" onclick="toggleHitoCheck(this)">
-          <span class="hito-num-label">01</span>
-          <p class="hito-check-text done">Liderar una iniciativa de punta a punta en el trimestre.</p>
-          <div class="hito-check-circle done">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div id="norte-hitos-container">
+          <div class="hito-check-row" onclick="toggleHitoCheck(this)">
+            <span class="hito-num-label">01</span>
+            <p class="hito-check-text">Completá el onboarding para ver tus hitos.</p>
+            <div class="hito-check-circle"></div>
           </div>
-        </div>
-        <div class="hito-check-row" onclick="toggleHitoCheck(this)">
-          <span class="hito-num-label">02</span>
-          <p class="hito-check-text">Dar feedback estructurado a dos personas del equipo.</p>
-          <div class="hito-check-circle"></div>
-        </div>
-        <div class="hito-check-row" onclick="toggleHitoCheck(this)">
-          <span class="hito-num-label">03</span>
-          <p class="hito-check-text">Proponer y defender una decisión estratégica ante stakeholders.</p>
-          <div class="hito-check-circle"></div>
         </div>
       </div>
 
@@ -1895,6 +1885,7 @@ async function checkProfileAndRoute() {
     // Perfil completo → ir al app con su nombre
     updateGreetingName(firstName);
     goTo('s6');
+    loadAppData();
   } else {
     // Sin perfil → onboarding (pedir carrera y objetivos)
     // Pre-llenar nombre si viene de Google
@@ -1977,6 +1968,65 @@ async function guardarPerfil(datos) {
   await supa.from('profiles').upsert({ id: currentUser.id, ...datos });
 }
 
+// ── Cargar datos reales en el app ────────────────────
+async function loadAppData() {
+  if (!currentUser) return;
+
+  // 1. Cargar perfil
+  const { data: profile } = await supa
+    .from('profiles')
+    .select('name, role, norte, horizonte')
+    .eq('id', currentUser.id)
+    .single();
+
+  if (!profile) return;
+
+  // Actualizar saludo con nombre real
+  if (profile.name) {
+    updateGreetingName(profile.name.split(' ')[0]);
+  }
+
+  // Actualizar card de norte en Home
+  const homeNorteText = document.getElementById('home-norte-text');
+  if (homeNorteText && profile.norte) {
+    homeNorteText.textContent = profile.norte;
+  }
+
+  // Actualizar texto de norte en panel Norte
+  const norteObjetivoText = document.getElementById('norte-objetivo-text');
+  if (norteObjetivoText && profile.norte) {
+    norteObjetivoText.textContent = profile.norte;
+  }
+
+  // 2. Cargar hitos
+  const { data: hitos } = await supa
+    .from('hitos')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('orden');
+
+  if (hitos && hitos.length > 0) {
+    // Primer hito en la home card
+    const homeHitoOne = document.getElementById('home-hito-one');
+    if (homeHitoOne) homeHitoOne.textContent = hitos[0].texto;
+
+    // Renderizar hitos en panel Norte
+    const container = document.getElementById('norte-hitos-container');
+    if (container) {
+      container.innerHTML = hitos.map((h, i) => `
+        <div class="hito-check-row" onclick="toggleHitoCheck(this)">
+          <span class="hito-num-label">${String(i+1).padStart(2,'0')}</span>
+          <p class="hito-check-text${h.completado ? ' done' : ''}">${h.texto}</p>
+          <div class="hito-check-circle${h.completado ? ' done' : ''}">
+            ${h.completado ? '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
+          </div>
+        </div>
+      `).join('');
+      updateNorteProgress();
+    }
+  }
+}
+
 // ── S2: guardar nombre + rol → ir a S3 ───────────────
 async function guardarS2() {
   const name = document.getElementById('input-name').value.trim();
@@ -2014,11 +2064,9 @@ async function confirmarNorte() {
   const horizonte = document.querySelector('.horizon-pill.active')?.textContent?.trim() || '3 meses';
   await guardarPerfil({ horizonte });
 
-  // Actualizar nombre en greeting y entrar al app
-  const name = (await supa.from('profiles').select('name').eq('id', currentUser.id).single()).data?.name;
-  if (name) updateGreetingName(name.split(' ')[0]);
-
+  // Entrar al app y cargar datos reales
   goTo('s6');
+  await loadAppData();
 }
 
 function goTo(id) {
