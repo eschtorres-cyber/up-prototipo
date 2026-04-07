@@ -1178,7 +1178,7 @@ body {
       <!-- Meta principal -->
       <p class="section-label" style="margin-bottom:10px;">Meta principal</p>
       <div class="card-l1" style="margin-bottom:24px;padding:14px 16px;">
-        <textarea style="width:100%;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:500;color:var(--text-primary);outline:none;resize:none;line-height:1.5;caret-color:var(--accent);" rows="3">Pasar de ejecutor a gestión estratégica de recursos.</textarea>
+        <textarea id="s5b-norte-textarea" style="width:100%;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:500;color:var(--text-primary);outline:none;resize:none;line-height:1.5;caret-color:var(--accent);" rows="3">Pasar de ejecutor a gestión estratégica de recursos.</textarea>
       </div>
 
       <!-- Horizonte temporal -->
@@ -1198,24 +1198,24 @@ body {
       <div class="card-l1" id="hitos-ajustar-container" style="padding:0;margin-bottom:24px;">
         <div class="hito-drag-row">
           <span class="hito-check-num" style="font-size:11px;font-weight:700;color:var(--text-secondary);flex-shrink:0;min-width:20px;letter-spacing:0.04em;padding-top:2px;">01</span>
-          <p class="hito-check-text" style="flex:1;">Auditoría completa de flujos de trabajo actuales.</p>
+          <input type="text" id="hito01" class="hito-check-text" style="flex:1;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--text-primary);outline:none;caret-color:var(--accent);padding:2px 0;" placeholder="Primer hito hacia tu norte..." />
           <span class="hito-drag-handle">⠿</span>
         </div>
         <div class="hito-drag-row">
           <span class="hito-check-num" style="font-size:11px;font-weight:700;color:var(--text-secondary);flex-shrink:0;min-width:20px;letter-spacing:0.04em;padding-top:2px;">02</span>
-          <p class="hito-check-text" style="flex:1;">Implementación de framework de priorización OKR.</p>
+          <input type="text" id="hito02" class="hito-check-text" style="flex:1;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--text-primary);outline:none;caret-color:var(--accent);padding:2px 0;" placeholder="Segundo hito hacia tu norte..." />
           <span class="hito-drag-handle">⠿</span>
         </div>
-        <div class="hito-drag-row">
+        <div class="hito-drag-row" id="hito03row">
           <span class="hito-check-num" style="font-size:11px;font-weight:700;color:var(--text-secondary);flex-shrink:0;min-width:20px;letter-spacing:0.04em;padding-top:2px;">03</span>
-          <p class="hito-check-text" style="flex:1;">Delegación del 40% de tareas operativas.</p>
+          <input type="text" id="hito03" class="hito-check-text" style="flex:1;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--text-primary);outline:none;caret-color:var(--accent);padding:2px 0;" placeholder="Tercer hito hacia tu norte..." />
           <span class="hito-drag-handle">⠿</span>
         </div>
       </div>
     </div>
     <!-- Fixed bottom -->
     <div class="fixed-bottom over-content">
-      <button class="btn-primary has-glow" onclick="goTo('s6')">Actualizar Objetivo</button>
+      <button class="btn-primary has-glow" onclick="confirmarNorte()">Confirmar mi norte</button>
       <button class="btn-text" onclick="goTo('s5')">Cancelar</button>
     </div>
   </div>
@@ -1265,7 +1265,7 @@ body {
       </div>
 
       <!-- Resumen ejecutivo de la semana -->
-      <div class="card-l2" style="border-color:rgba(22,163,74,0.22);background:rgba(22,163,74,0.05);margin-bottom:24px;cursor:pointer;-webkit-tap-highlight-color:transparent;" onclick="openResumenSheet()">
+      <div id="card-resumen-semanal" class="card-l2" style="display:none;border-color:rgba(22,163,74,0.22);background:rgba(22,163,74,0.05);margin-bottom:24px;cursor:pointer;-webkit-tap-highlight-color:transparent;" onclick="openResumenSheet()">
         <div class="ai-label" style="margin-bottom:10px;">
           <div class="spark-dot"></div>
           Resumen de la semana
@@ -1882,10 +1882,26 @@ async function checkProfileAndRoute() {
     .single();
 
   if (profile?.norte) {
-    // Perfil completo → ir al app con su nombre
+    // Tiene norte → verificar si también tiene hitos
+    const { data: hitos } = await supa
+      .from('hitos')
+      .select('id')
+      .eq('user_id', currentUser.id)
+      .limit(1);
+
     updateGreetingName(firstName);
-    goTo('s6');
-    loadAppData();
+
+    if (hitos && hitos.length > 0) {
+      // Perfil completo con hitos → entrar al app
+      goTo('s6');
+      loadAppData();
+    } else {
+      // Tiene norte pero sin hitos → ir a S5b para definir hitos
+      // Pre-llenar la textarea con el norte guardado
+      const s5bTextarea = document.getElementById('s5b-norte-textarea');
+      if (s5bTextarea) s5bTextarea.value = profile.norte;
+      goTo('s5b');
+    }
   } else {
     // Sin perfil → onboarding (pedir carrera y objetivos)
     // Pre-llenar nombre si viene de Google
@@ -2024,6 +2040,36 @@ async function loadAppData() {
       `).join('');
       updateNorteProgress();
     }
+  } else {
+    // Sin hitos: mostrar empty state con CTA
+    const homeHitoOne = document.getElementById('home-hito-one');
+    if (homeHitoOne) homeHitoOne.textContent = 'Todavía no definiste hitos.';
+
+    const container = document.getElementById('norte-hitos-container');
+    if (container) {
+      container.innerHTML = `
+        <div style="padding:16px 0;text-align:center;">
+          <p style="font-size:14px;color:var(--text-secondary);margin-bottom:12px;">Todavía no definiste tus hitos.</p>
+          <button onclick="switchTab('agregar-objetivo')" style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;padding:8px 16px;border:1px solid rgba(22,163,74,0.3);border-radius:var(--r-full);">+ Definir hitos</button>
+        </div>
+      `;
+    }
+  }
+
+  // 3. Mostrar resumen semanal solo si hay resumenes reales
+  const { data: resumenes } = await supa
+    .from('resumenes')
+    .select('id, semana, intencion')
+    .eq('user_id', currentUser.id)
+    .order('semana', { ascending: false })
+    .limit(1);
+
+  const cardResumen = document.getElementById('card-resumen-semanal');
+  if (cardResumen && resumenes && resumenes.length > 0) {
+    const r = resumenes[0];
+    const textoResumen = r.intencion || 'Tu semana tiene avances registrados.';
+    cardResumen.querySelector('p').textContent = textoResumen;
+    cardResumen.style.display = 'block';
   }
 }
 
