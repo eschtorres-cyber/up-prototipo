@@ -10,6 +10,7 @@
 <link rel="apple-touch-icon" href="icon-up.png">
 <link rel="manifest" href="manifest.json">
 <title>UP — Onboarding</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
@@ -942,12 +943,36 @@ body {
         Continuar con Google
       </button>
 
+      <!-- Divisor -->
+      <div style="display:flex;align-items:center;gap:12px;width:100%;margin-top:20px;animation:s1In 480ms var(--ease-out) both;animation-delay:520ms;">
+        <div style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></div>
+        <span style="font-size:12px;color:var(--text-secondary);">o con email</span>
+        <div style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></div>
+      </div>
+
+      <!-- Email/Password -->
+      <div style="width:100%;display:flex;flex-direction:column;gap:10px;margin-top:16px;animation:s1In 480ms var(--ease-out) both;animation-delay:580ms;">
+        <input id="email-input" type="email" placeholder="tu@email.com" style="
+          width:100%;height:48px;background:rgba(255,255,255,0.06);
+          border:1px solid rgba(255,255,255,0.10);border-radius:12px;
+          padding:0 16px;font-family:'DM Sans',sans-serif;font-size:15px;
+          color:var(--text-primary);outline:none;
+        ">
+        <input id="pass-input" type="password" placeholder="Contraseña" style="
+          width:100%;height:48px;background:rgba(255,255,255,0.06);
+          border:1px solid rgba(255,255,255,0.10);border-radius:12px;
+          padding:0 16px;font-family:'DM Sans',sans-serif;font-size:15px;
+          color:var(--text-primary);outline:none;
+        ">
+        <button id="btn-email-signin" onclick="handleEmailSignIn()" style="
+          width:100%;height:48px;background:var(--accent);border:none;border-radius:12px;
+          font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;
+          color:#fff;cursor:pointer;transition:opacity 80ms;
+        ">Ingresar</button>
+      </div>
+
       <!-- Nota de privacidad -->
-      <p style="font-size:12px;color:var(--text-secondary);text-align:center;margin-top:20px;line-height:1.6;animation:s1In 480ms var(--ease-out) both;animation-delay:580ms;">
-        Al continuar aceptás los
-        <span style="color:var(--accent);text-decoration:underline;">Términos de uso</span>
-        y la
-        <span style="color:var(--accent);text-decoration:underline;">Política de privacidad</span>.<br>
+      <p style="font-size:12px;color:var(--text-secondary);text-align:center;margin-top:16px;line-height:1.6;animation:s1In 480ms var(--ease-out) both;animation-delay:640ms;">
         Tus datos son tuyos — nunca los compartimos.
       </p>
     </div>
@@ -1809,19 +1834,96 @@ body {
 <script>
 let currentScreen = 's0';
 
-// ── Google Sign In (prototipo) ────────────────────────
-function handleGoogleSignIn() {
+// ── SUPABASE ─────────────────────────────────────────
+const SUPA_URL = 'https://bewaxdubytxnpkwegsma.supabase.co';
+const SUPA_KEY = 'sb_publishable_2nZQSekx9f7mgUBFet_mAQ_x3tUujQa';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+let currentUser = null;
+
+// Verificar sesión al cargar
+document.addEventListener('DOMContentLoaded', async () => {
+  const { data: { session } } = await supa.auth.getSession();
+  if (session?.user) {
+    currentUser = session.user;
+    goTo('s6'); // ya logueado → ir directo al app
+  }
+  supa.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session?.user) {
+      currentUser = session.user;
+    }
+    if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      goTo('s0');
+    }
+  });
+});
+
+// ── Google Sign In real ───────────────────────────────
+async function handleGoogleSignIn() {
   const btn = document.querySelector('#s0 button');
   if (!btn) return;
-  // Feedback visual
-  btn.textContent = '  Verificando...';
+  btn.innerHTML = '  Verificando...';
   btn.style.opacity = '0.75';
   btn.style.pointerEvents = 'none';
-  // Simula handshake OAuth (~800ms) y pasa a S1
-  setTimeout(() => {
+  const { error } = await supa.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin }
+  });
+  if (error) {
+    btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Continuar con Google';
     btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+    showToast('Error al conectar con Google');
+  }
+}
+
+// ── Email/Password Sign In ────────────────────────────
+async function handleEmailSignIn() {
+  const email = document.getElementById('email-input')?.value?.trim();
+  const pass  = document.getElementById('pass-input')?.value;
+  const btn   = document.getElementById('btn-email-signin');
+  if (!email || !pass) { showToast('Completá email y contraseña'); return; }
+  btn.textContent = 'Ingresando...';
+  btn.style.opacity = '0.7';
+  const { data, error } = await supa.auth.signInWithPassword({ email, password: pass });
+  if (error) {
+    // Intentar registrar si no existe
+    const { error: signUpError } = await supa.auth.signUp({ email, password: pass });
+    if (signUpError) {
+      showToast('Error: ' + signUpError.message);
+      btn.textContent = 'Ingresar';
+      btn.style.opacity = '1';
+      return;
+    }
+    showToast('Cuenta creada — revisá tu email para confirmar');
+  } else {
+    currentUser = data.user;
     goTo('s1');
-  }, 900);
+  }
+  btn.textContent = 'Ingresar';
+  btn.style.opacity = '1';
+}
+
+// ── Guardar entrada de diario ─────────────────────────
+async function guardarEntrada(texto, tags) {
+  if (!currentUser) return;
+  const now   = new Date();
+  const semana = `${now.getFullYear()}-W${String(Math.ceil((now - new Date(now.getFullYear(), 0, 1)) / 604800000)).padStart(2,'0')}`;
+  const { error } = await supa.from('entradas').insert({
+    user_id: currentUser.id,
+    texto,
+    tags,
+    semana
+  });
+  if (error) console.error('Error guardando entrada:', error);
+  else showToast('Entrada guardada');
+}
+
+// ── Guardar perfil ────────────────────────────────────
+async function guardarPerfil(datos) {
+  if (!currentUser) return;
+  await supa.from('profiles').upsert({ id: currentUser.id, ...datos });
 }
 
 function goTo(id) {
