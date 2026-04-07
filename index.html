@@ -82,6 +82,10 @@
   --spring:   cubic-bezier(0.34,1.56,0.64,1);
 }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
 
 body {
@@ -906,8 +910,18 @@ body {
 
 <div class="phone" id="phone">
 
+  <!-- ▓▓▓ SPLASH — carga inicial mientras verifica sesión ▓▓▓ -->
+  <div class="screen active" id="splash" style="background:var(--bg-base);display:flex;align-items:center;justify-content:center;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+      <div style="width:64px;height:64px;background:rgba(22,163,74,0.12);border:1.5px solid rgba(22,163,74,0.25);border-radius:18px;display:flex;align-items:center;justify-content:center;">
+        <span style="font-size:20px;font-weight:700;color:var(--accent);">UP</span>
+      </div>
+      <div style="width:20px;height:20px;border:2px solid rgba(22,163,74,0.3);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+    </div>
+  </div>
+
   <!-- ▓▓▓ S0 — GOOGLE SIGN IN ▓▓▓ -->
-  <div class="screen active" id="s0">
+  <div class="screen" id="s0">
     <!-- Fondo oscuro con glow sutil -->
     <div style="position:absolute;inset:0;background:var(--bg-base);overflow:hidden;">
       <div style="position:absolute;top:35%;left:50%;transform:translateX(-50%);width:320px;height:220px;background:rgba(22,163,74,0.07);border-radius:50%;filter:blur(60px);pointer-events:none;"></div>
@@ -1832,7 +1846,7 @@ body {
 </div>
 
 <script>
-let currentScreen = 's0';
+let currentScreen = 'splash';
 
 // ── SUPABASE ─────────────────────────────────────────
 const SUPA_URL = 'https://bewaxdubytxnpkwegsma.supabase.co';
@@ -1841,16 +1855,21 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 let currentUser = null;
 
-// Verificar sesión al cargar
+// Verificar sesión al cargar — splash primero, luego decide
 document.addEventListener('DOMContentLoaded', async () => {
+  // Pequeño delay para que el splash se vea suave
+  await new Promise(r => setTimeout(r, 600));
   const { data: { session } } = await supa.auth.getSession();
   if (session?.user) {
     currentUser = session.user;
-    goTo('s6'); // ya logueado → ir directo al app
+    goTo('s6'); // sesión activa → directo al app
+  } else {
+    goTo('s0'); // sin sesión → pantalla de login
   }
   supa.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN' && session?.user) {
       currentUser = session.user;
+      goTo('s6');
     }
     if (event === 'SIGNED_OUT') {
       currentUser = null;
