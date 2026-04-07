@@ -1,0 +1,11 @@
+# Certificados SSL — nunca subir al repo
+cert.pem
+key.pem
+
+# Sistema
+.DS_Store
+*.log
+
+# Python
+__pycache__/
+*.pyc
