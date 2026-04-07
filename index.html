@@ -1241,7 +1241,7 @@ body {
     <div class="scroll-content tab-panel active" id="panel-home" style="padding:16px 24px 120px;">
       <!-- Greeting: mismo tamaño, diferenciados por peso y color -->
       <p id="greeting-time" style="font-size:32px;font-weight:700;color:var(--text-primary);line-height:1.2;margin-bottom:2px;">Buenas noches,</p>
-      <h1 style="font-size:32px;font-weight:700;line-height:1.2;letter-spacing:-0.02em;color:var(--text-primary);margin-bottom:6px;">Sara.</h1>
+      <h1 id="greeting-name" style="font-size:32px;font-weight:700;line-height:1.2;letter-spacing:-0.02em;color:var(--text-primary);margin-bottom:6px;">Sara.</h1>
       <p style="font-size:14px;color:var(--text-secondary);margin-bottom:32px;line-height:1.5;">Tu carrera, finalmente tuya.</p>
 
       <!-- Hoy — captura diaria primero (acción inmediata) -->
@@ -1850,20 +1850,57 @@ document.addEventListener('DOMContentLoaded', async () => {
   const { data: { session } } = await supa.auth.getSession();
   if (session?.user) {
     currentUser = session.user;
-    goTo('s6'); // sesión activa → directo al app
+    await checkProfileAndRoute();
   }
-  // sin sesión → se queda en s0 (ya activo por defecto)
-  supa.auth.onAuthStateChange((event, session) => {
+  // sin sesión → se queda en s1 (ya activo por defecto)
+  supa.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user) {
       currentUser = session.user;
-      goTo('s6');
+      await checkProfileAndRoute();
     }
     if (event === 'SIGNED_OUT') {
       currentUser = null;
-      goTo('s0');
+      goTo('s1');
     }
   });
 });
+
+// ── Verificar perfil y rutear ─────────────────────────
+async function checkProfileAndRoute() {
+  if (!currentUser) return;
+
+  // Tomar nombre del perfil de Google
+  const googleName = currentUser.user_metadata?.full_name
+                  || currentUser.user_metadata?.name
+                  || currentUser.email?.split('@')[0]
+                  || 'vos';
+  const firstName = googleName.split(' ')[0];
+
+  // Verificar si ya tiene perfil completo en Supabase
+  const { data: profile } = await supa
+    .from('profiles')
+    .select('name, role, norte')
+    .eq('id', currentUser.id)
+    .single();
+
+  if (profile?.norte) {
+    // Perfil completo → ir al app con su nombre
+    updateGreetingName(firstName);
+    goTo('s6');
+  } else {
+    // Sin perfil → onboarding (pedir carrera y objetivos)
+    // Pre-llenar nombre si viene de Google
+    const nameInput = document.getElementById('input-name');
+    if (nameInput && googleName !== 'vos') nameInput.value = googleName;
+    goTo('s2');
+  }
+}
+
+// ── Actualizar nombre en el greeting ─────────────────
+function updateGreetingName(name) {
+  const el = document.getElementById('greeting-name');
+  if (el) el.textContent = name + '.';
+}
 
 // ── Google Sign In real ───────────────────────────────
 async function handleGoogleSignIn() {
