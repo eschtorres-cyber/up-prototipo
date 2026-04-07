@@ -2118,12 +2118,47 @@ function typeWriter(text, el, speed = 28) {
   }, speed);
 }
 
-function openSynthesisSheet() {
+async function openSynthesisSheet() {
   const txt = document.getElementById('diary-input').value.trim();
   if (txt.length > 3) document.getElementById('sheet-original-text').textContent = '"' + txt + '"';
   document.getElementById('sheet-overlay').classList.add('visible');
   document.getElementById('synthesis-sheet').classList.add('open');
-  setTimeout(() => typeWriter(synthText, document.getElementById('typewriter-output')), 400);
+
+  const outputEl = document.getElementById('typewriter-output');
+  outputEl.textContent = '✦ UP está analizando...';
+
+  // Llamar a Gemini para síntesis real
+  try {
+    const profile = currentUser
+      ? (await supa.from('profiles').select('norte, role').eq('id', currentUser.id).single()).data
+      : null;
+
+    const res = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tipo: 'sintesis',
+        datos: { texto: txt, norte: profile?.norte, rol: profile?.role }
+      })
+    });
+    const { resultado } = await res.json();
+    outputEl.textContent = '';
+    setTimeout(() => typeWriter(resultado || synthText, outputEl), 200);
+
+    // Guardar entrada + síntesis en Supabase
+    if (currentUser) {
+      const tags = Array.from(document.querySelectorAll('#panel-home .chip.active')).map(c => c.textContent.trim());
+      await guardarEntrada(txt, tags);
+      // Actualizar síntesis en la última entrada guardada
+      const { data: ultima } = await supa.from('entradas')
+        .select('id').eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false }).limit(1).single();
+      if (ultima) await supa.from('entradas').update({ sintesis_up: resultado }).eq('id', ultima.id);
+    }
+  } catch {
+    outputEl.textContent = '';
+    setTimeout(() => typeWriter(synthText, outputEl), 200);
+  }
 }
 
 function closeSheet() {
@@ -2303,44 +2338,84 @@ function upSuggestObjetivo(btn) {
   if (hito02) hito02.value = '';
   if (hito03) hito03.value = '';
 
-  const pack = UP_SUGGESTIONS[Math.floor(Math.random() * UP_SUGGESTIONS.length)];
+  // Llamar a Gemini para sugerencia real
+  (async () => {
+    try {
+      const profile = currentUser
+        ? (await supa.from('profiles').select('role, norte').eq('id', currentUser.id).single()).data
+        : null;
+      const textoActual = objetivoInput?.value?.trim() || '';
+      const horizonte = pillsContainer?.querySelector('.horizon-pill.active')?.textContent?.trim() || '3 meses';
 
-  // 1. Seleccionar horizonte temporal
-  if (pillsContainer) {
-    pillsContainer.querySelectorAll('.horizon-pill').forEach(p => {
-      p.classList.toggle('active', p.textContent.trim() === pack.horizonte);
-    });
-  }
+      const res = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipo: 'mejorar_norte',
+          datos: { objetivo: textoActual, rol: profile?.role, horizonte }
+        })
+      });
+      const { resultado } = await res.json();
+      const pack = typeof resultado === 'object' ? resultado : UP_SUGGESTIONS[0];
 
-  // 2. Typewriter en el objetivo (~280ms total antes de pasar a hitos)
-  setTimeout(() => {
-    typeWriterField(objetivoInput, pack.objetivo, 16, () => {
+      // Horizonte
+      if (pillsContainer && pack.horizonte) {
+        pillsContainer.querySelectorAll('.horizon-pill').forEach(p => {
+          p.classList.toggle('active', p.textContent.trim() === pack.horizonte);
+        });
+      }
 
-      // 3. Hito 01 — rápido (ya sabe lo que viene)
       setTimeout(() => {
-        if (hito01) typeWriterField(hito01, pack.hitos[0], 12, () => {
-
-          // 4. Hito 02
+        typeWriterField(objetivoInput, pack.objetivo, 16, () => {
           setTimeout(() => {
-            if (hito02) typeWriterField(hito02, pack.hitos[1], 12, () => {
-
-              // 5. Hito 03 — aparece si hay sugerencia de 3
-              if (pack.hitos[2] && hito03row && hito03) {
-                hito03row.style.display = 'flex';
-                setTimeout(() => {
-                  typeWriterField(hito03, pack.hitos[2], 12, () => {
-                    resetUpBtn(btn, label, spark);
-                  });
-                }, 120);
-              } else {
-                resetUpBtn(btn, label, spark);
-              }
+            if (hito01) typeWriterField(hito01, pack.hitos[0], 12, () => {
+              setTimeout(() => {
+                if (hito02) typeWriterField(hito02, pack.hitos[1], 12, () => {
+                  if (pack.hitos[2] && hito03row && hito03) {
+                    hito03row.style.display = 'flex';
+                    setTimeout(() => typeWriterField(hito03, pack.hitos[2], 12, () => resetUpBtn(btn, label, spark)), 120);
+                  } else { resetUpBtn(btn, label, spark); }
+                });
+              }, 120);
             });
           }, 120);
         });
-      }, 120);
-    });
-  }, 400);
+      }, 300);
+
+    } catch {
+      // Fallback a sugerencias hardcoded
+      const pack = UP_SUGGESTIONS[Math.floor(Math.random() * UP_SUGGESTIONS.length)];
+      if (pillsContainer) {
+        pillsContainer.querySelectorAll('.horizon-pill').forEach(p => {
+          p.classList.toggle('active', p.textContent.trim() === pack.horizonte);
+        });
+      }
+      setTimeout(() => {
+        typeWriterField(objetivoInput, pack.objetivo, 16, () => {
+          setTimeout(() => {
+            if (hito01) typeWriterField(hito01, pack.hitos[0], 12, () => {
+
+              setTimeout(() => {
+                if (hito02) typeWriterField(hito02, pack.hitos[1], 12, () => {
+
+                  if (pack.hitos[2] && hito03row && hito03) {
+                    hito03row.style.display = 'flex';
+                    setTimeout(() => {
+                      typeWriterField(hito03, pack.hitos[2], 12, () => {
+                        resetUpBtn(btn, label, spark);
+                      });
+                    }, 120);
+                  } else {
+                    resetUpBtn(btn, label, spark);
+                  }
+                });
+              }, 120);
+            });
+          }, 120);
+        });
+      }, 400);
+    }
+  })();
 }
 
 // ── + Añadir hito ────────────────────────────────────
