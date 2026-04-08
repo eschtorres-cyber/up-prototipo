@@ -32,7 +32,7 @@ export default async function handler(req, res) {
 Norte: ${norte || 'crecer profesionalmente'}
 Entrada de hoy: "${texto}"
 
-Síntesis en máximo 2 oraciones. Resaltá el patrón de crecimiento visible en esta entrada. Conectá con su norte si aplica.`;
+2 oraciones cortas. Primera: qué hizo y qué significa. Segunda: cómo conecta con su norte. Máx 25 palabras en total.`;
   }
 
   // ── 2. MEJORAR OBJETIVO CON UP ────────────────────────
@@ -42,15 +42,17 @@ Síntesis en máximo 2 oraciones. Resaltá el patrón de crecimiento visible en 
 Objetivo en bruto: "${objetivo}"
 Horizonte: ${horizonte || '3 meses'}
 
-Devolvé este JSON:
+Devolvé este JSON. Sin palabras de relleno. Sin frases largas.
 {
-  "objetivo": "versión mejorada: específica, medible, orientada al impacto. Máx 2 oraciones.",
+  "objetivo": "1 oración. Qué vas a lograr y para qué. Máx 15 palabras.",
   "hitos": [
-    "hito 1 concreto y accionable",
-    "hito 2 concreto y accionable",
-    "hito 3 concreto y accionable"
+    "acción concreta. verbo + resultado. máx 8 palabras.",
+    "acción concreta. verbo + resultado. máx 8 palabras.",
+    "acción concreta. verbo + resultado. máx 8 palabras.",
+    "acción concreta. verbo + resultado. máx 8 palabras."
   ]
-}`;
+}
+4 hitos. Cada uno debe poder leerse en 3 segundos.`;
   }
 
   // ── 3. RESUMEN SEMANAL EJECUTIVO ──────────────────────
@@ -80,13 +82,13 @@ Devolvé este JSON:
 Entradas:
 ${textos}
 
-Detectá logros concretos y significativos. Devolvé este JSON:
+Detectá logros concretos. Devolvé este JSON:
 {
   "logros": [
-    { "titulo": "título corto del logro (máx 6 palabras)", "descripcion": "1-2 oraciones específicas" }
+    { "titulo": "máx 5 palabras. verbo pasado + resultado.", "descripcion": "1 oración. qué pasó y qué impacto tuvo." }
   ]
 }
-Máximo 5 logros. Solo los más relevantes para el norte.`;
+Máximo 5 logros. Solo los más relevantes. Sin logros genéricos.`;
   }
 
   else {
