@@ -99,7 +99,7 @@ Máximo 5 logros. Solo los más significativos.`;
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -110,8 +110,19 @@ Máximo 5 logros. Solo los más significativos.`;
       }
     );
 
+    if (!response.ok) {
+      const errBody = await response.text();
+      console.error('Gemini HTTP error:', response.status, errBody);
+      return res.status(502).json({ error: `Gemini error ${response.status}: ${errBody}` });
+    }
+
     const result = await response.json();
     const text = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    if (!text) {
+      console.error('Gemini empty response:', JSON.stringify(result));
+      return res.status(502).json({ error: 'Gemini devolvió respuesta vacía' });
+    }
 
     // Para respuestas JSON intentar parsear
     if (['mejorar_norte', 'resumen_semanal', 'detectar_logros'].includes(tipo)) {
@@ -126,6 +137,7 @@ Máximo 5 logros. Solo los más significativos.`;
     return res.status(200).json({ resultado: text });
 
   } catch (error) {
+    console.error('Gemini fetch error:', error);
     return res.status(500).json({ error: 'Error al llamar a Gemini: ' + error.message });
   }
 }
