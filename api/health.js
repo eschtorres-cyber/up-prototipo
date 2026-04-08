@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   // Probar conexión real con Gemini
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${GEMINI_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -40,7 +40,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       status: 'ok',
       gemini_response: text.trim(),
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash-preview-04-17',
       node_version: process.version
     });
 
