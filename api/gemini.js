@@ -1,4 +1,16 @@
 // api/gemini.js — Powered by Claude (Anthropic)
+
+const UP_SYSTEM = `Sos UP — un coach de desarrollo profesional integrado en una app.
+Tu voz es directa, empática y precisa. Nunca genérica. Siempre orientada al impacto real.
+
+Reglas de respuesta:
+- Segunda persona siempre ("Lideraste", "Demostraste", "Propusiste")
+- Sin frases de relleno ("Es importante...", "Recordá que...", "Como profesional...")
+- Sin introducción ni cierre — devolvés solo lo pedido
+- Específico a lo que el usuario escribió, nunca respuestas de plantilla
+- Tono: colega senior que te conoce, no terapeuta ni motivador genérico
+- Cuando devolvés JSON: solo el JSON, sin markdown, sin comentarios`;
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -16,33 +28,23 @@ export default async function handler(req, res) {
   // ── 1. SÍNTESIS DE ENTRADA DE DIARIO ─────────────────
   if (tipo === 'sintesis') {
     const { texto, norte, rol } = datos;
-    prompt = `Sos UP, un coach de desarrollo profesional directo y empático.
+    prompt = `Rol: ${rol || 'profesional'}
+Norte: ${norte || 'crecer profesionalmente'}
+Entrada de hoy: "${texto}"
 
-El usuario trabaja como: ${rol || 'profesional'}
-Su norte (objetivo): ${norte || 'crecer profesionalmente'}
-Entrada de diario de hoy: "${texto}"
-
-Escribí UNA síntesis de máximo 2 oraciones que:
-- Resalte el patrón de liderazgo o crecimiento que se ve en esta entrada
-- Use segunda persona ("Lideraste...", "Propusiste...", "Demostraste...")
-- Sea específica a lo que escribió, no genérica
-- Conecte con su norte si es relevante
-
-Solo devolvé las 2 oraciones, sin introducción ni explicación.`;
+Síntesis en máximo 2 oraciones. Resaltá el patrón de crecimiento visible en esta entrada. Conectá con su norte si aplica.`;
   }
 
   // ── 2. MEJORAR OBJETIVO CON UP ────────────────────────
   else if (tipo === 'mejorar_norte') {
     const { objetivo, rol, horizonte } = datos;
-    prompt = `Sos UP, un coach de carrera experto en desarrollo profesional.
+    prompt = `Rol: ${rol || 'profesional'}
+Objetivo en bruto: "${objetivo}"
+Horizonte: ${horizonte || '3 meses'}
 
-El usuario trabaja como: ${rol || 'profesional'}
-Su objetivo en bruto: "${objetivo}"
-Horizonte de tiempo: ${horizonte || '3 meses'}
-
-Devolvé EXACTAMENTE este JSON (sin markdown, sin explicación):
+Devolvé este JSON:
 {
-  "objetivo": "versión mejorada del objetivo, específica, medible, orientada al impacto. Máx 2 oraciones.",
+  "objetivo": "versión mejorada: específica, medible, orientada al impacto. Máx 2 oraciones.",
   "hitos": [
     "hito 1 concreto y accionable",
     "hito 2 concreto y accionable",
@@ -54,20 +56,18 @@ Devolvé EXACTAMENTE este JSON (sin markdown, sin explicación):
   // ── 3. RESUMEN SEMANAL EJECUTIVO ──────────────────────
   else if (tipo === 'resumen_semanal') {
     const { entradas, norte, rol } = datos;
-    const textos = entradas.map((e, i) => `Entrada ${i+1}: ${e.texto}`).join('\n');
-    prompt = `Sos UP, coach de desarrollo profesional.
-
-Usuario: ${rol || 'profesional'}
+    const textos = entradas.map((e, i) => `${i+1}. ${e.texto}`).join('\n');
+    prompt = `Rol: ${rol || 'profesional'}
 Norte: ${norte || 'crecer profesionalmente'}
 
-Entradas de diario de esta semana:
+Entradas de la semana:
 ${textos}
 
-Devolvé EXACTAMENTE este JSON (sin markdown):
+Devolvé este JSON:
 {
-  "avances": ["logro 1 específico", "logro 2", "logro 3"],
-  "para_llevar": ["acción concreta 1 para esta semana", "acción 2"],
-  "intencion": "una frase motivadora y específica para arrancar la semana"
+  "avances": ["logro específico 1", "logro 2", "logro 3"],
+  "para_llevar": ["acción concreta para la próxima semana 1", "acción 2"],
+  "intencion": "una frase de intención para arrancar la semana, específica al contexto del usuario"
 }`;
   }
 
@@ -75,20 +75,18 @@ Devolvé EXACTAMENTE este JSON (sin markdown):
   else if (tipo === 'detectar_logros') {
     const { entradas, norte } = datos;
     const textos = entradas.slice(0, 20).map((e, i) => `${i+1}. ${e.texto}`).join('\n');
-    prompt = `Sos UP. Analizá estas entradas de diario y detectá logros concretos.
-
-Norte del usuario: ${norte || 'crecimiento profesional'}
+    prompt = `Norte: ${norte || 'crecimiento profesional'}
 
 Entradas:
 ${textos}
 
-Devolvé EXACTAMENTE este JSON (sin markdown):
+Detectá logros concretos y significativos. Devolvé este JSON:
 {
   "logros": [
-    { "titulo": "título corto del logro", "descripcion": "descripción de 1-2 oraciones" }
+    { "titulo": "título corto del logro (máx 6 palabras)", "descripcion": "1-2 oraciones específicas" }
   ]
 }
-Máximo 5 logros. Solo los más significativos.`;
+Máximo 5 logros. Solo los más relevantes para el norte.`;
   }
 
   else {
@@ -106,6 +104,7 @@ Máximo 5 logros. Solo los más significativos.`;
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
         max_tokens: 512,
+        system: UP_SYSTEM,
         messages: [{ role: 'user', content: prompt }]
       })
     });
