@@ -669,7 +669,11 @@ body {
 /* ─── TASK FLOW HEADER ──────────────────────────────── */
 .flow-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 0 24px; gap: 12px;
+  padding: 14px 24px 14px; gap: 12px;
+  position: sticky; top: 0; z-index: 10;
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border-subtle);
+  margin: 0 -24px;
 }
 .flow-back-btn {
   width: 36px; height: 36px; border-radius: 50%;
@@ -1163,14 +1167,14 @@ body {
       <span class="status-time">9:41</span>
       <div class="status-icons"><svg width="17" height="12" fill="white" viewBox="0 0 17 12"><rect x="0" y="3" width="3" height="9" rx="1" opacity="0.4"/><rect x="4.5" y="2" width="3" height="10" rx="1" opacity="0.6"/><rect x="9" y="0" width="3" height="12" rx="1" opacity="0.8"/><rect x="13.5" y="0" width="3" height="12" rx="1"/></svg></div>
     </div>
-    <div class="scroll-content" style="padding:0 24px 140px;">
-      <!-- Header dinámico según contexto -->
-      <div class="flow-header">
-        <button id="s5b-back-btn" class="flow-back-btn" onclick="goTo('s3')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <p id="s5b-header-label" style="font-size:15px;font-weight:600;color:var(--text-primary);flex:1;">Tu norte</p>
-      </div>
+    <!-- Header FIJO — sticky fuera del scroll -->
+    <div class="flow-header">
+      <button id="s5b-back-btn" class="flow-back-btn" onclick="s5bBack()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <p id="s5b-header-label" style="font-size:15px;font-weight:600;color:var(--text-primary);flex:1;">Tu norte</p>
+    </div>
+    <div class="scroll-content" style="padding:16px 24px 140px;">
       <!-- H1 dinámico -->
       <h1 id="s5b-title" style="font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.1;color:var(--text-primary);margin-bottom:12px;">Definí tu norte.</h1>
       <p id="s5b-subtitle" style="font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:28px;">Escribí tu objetivo o idea. Cuando tengas algo, UP puede ayudarte a construir los hitos para llegar.</p>
@@ -1220,10 +1224,9 @@ body {
         </div>
       </div>
     </div>
-    <!-- Fixed bottom -->
+    <!-- Fixed bottom — solo el confirmar, el back ya está en el header -->
     <div class="fixed-bottom over-content">
       <button id="s5b-confirmar-btn" class="btn-primary has-glow" disabled style="opacity:0.45;cursor:not-allowed;" onclick="confirmarNorte()">Confirmar mi norte</button>
-      <button class="btn-text" id="s5b-cancel-btn" onclick="goTo('s3')">Volver</button>
     </div>
   </div>
 
@@ -1883,16 +1886,13 @@ async function checkProfileAndRoute() {
       s5bTextarea.value = profile.norte;
       checkS5bField();
     }
+    s5bOrigen = 'onboarding'; // viene del onboarding, back vuelve a S3
     const headerLabel = document.getElementById('s5b-header-label');
     const title       = document.getElementById('s5b-title');
     const subtitle    = document.getElementById('s5b-subtitle');
-    const backBtn     = document.getElementById('s5b-back-btn');
-    const cancelBtn   = document.getElementById('s5b-cancel-btn');
     if (headerLabel) headerLabel.textContent = 'Tu norte';
     if (title)       title.textContent       = 'Definí tu norte.';
     if (subtitle)    subtitle.textContent    = 'Escribí tu objetivo. UP puede ayudarte a construir los hitos para llegar.';
-    if (backBtn)     backBtn.setAttribute('onclick', "goTo('s3')");
-    if (cancelBtn)   cancelBtn.setAttribute('onclick', "goTo('s3')");
     goTo('s5b');
   }
 }
@@ -2073,9 +2073,22 @@ async function loadAppData() {
   }
 }
 
-/// ── Ir a definir hitos desde home ────────────────────
+/// ── Navegación de S5b con origen dinámico ────────────
+let s5bOrigen = 's3'; // default: viene del onboarding
+
+function s5bBack() {
+  if (s5bOrigen === 'app') {
+    // Viene desde el app → volver al home sin perder sesión
+    goTo('s6');
+  } else {
+    // Viene del onboarding → volver al paso anterior
+    goTo('s3');
+  }
+}
+
+// ── Ir a definir hitos desde home ────────────────────
 function irADefinirHitos() {
-  // Pre-cargar el norte actual en S5b
+  s5bOrigen = 'app'; // viene del app, back vuelve a S6
   if (currentUser) {
     supa.from('profiles').select('norte').eq('id', currentUser.id).single().then(({ data }) => {
       const textarea = document.getElementById('s5b-norte-textarea');
@@ -2088,13 +2101,9 @@ function irADefinirHitos() {
   const headerLabel = document.getElementById('s5b-header-label');
   const title       = document.getElementById('s5b-title');
   const subtitle    = document.getElementById('s5b-subtitle');
-  const backBtn     = document.getElementById('s5b-back-btn');
-  const cancelBtn   = document.getElementById('s5b-cancel-btn');
   if (headerLabel) headerLabel.textContent = 'Tus hitos';
   if (title)       title.textContent       = 'Definí tus hitos.';
   if (subtitle)    subtitle.textContent    = 'Los hitos son los pasos concretos hacia tu norte. UP puede ayudarte a definirlos.';
-  if (backBtn)     backBtn.setAttribute('onclick', "switchTab('norte')");
-  if (cancelBtn)   cancelBtn.setAttribute('onclick', "switchTab('norte')");
   goTo('s5b');
 }
 
