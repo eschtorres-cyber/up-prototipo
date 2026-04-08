@@ -1816,64 +1816,72 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ── Verificar perfil y rutear ─────────────────────────
+// Casuísticas:
+// C1 — Usuario nuevo (sin name)       → S2 nombre+rol
+// C2 — Tiene name+role, sin norte     → S3 objetivo
+// C3 — Tiene norte, sin hitos         → S5b definir hitos
+// C4 — Perfil completo (norte+hitos)  → S6 home con datos
 async function checkProfileAndRoute() {
   if (!currentUser) return;
 
-  // Tomar nombre del perfil de Google
   const googleName = currentUser.user_metadata?.full_name
                   || currentUser.user_metadata?.name
                   || currentUser.email?.split('@')[0]
                   || 'vos';
   const firstName = googleName.split(' ')[0];
 
-  // Verificar si ya tiene perfil completo en Supabase
   const { data: profile } = await supa
     .from('profiles')
-    .select('name, role, norte')
+    .select('name, role, norte, horizonte')
     .eq('id', currentUser.id)
     .single();
 
-  if (profile?.norte) {
-    // Tiene norte → verificar si también tiene hitos
-    const { data: hitos } = await supa
-      .from('hitos')
-      .select('id')
-      .eq('user_id', currentUser.id)
-      .limit(1);
-
-    updateGreetingName(firstName);
-
-    if (hitos && hitos.length > 0) {
-      // Perfil completo con hitos → entrar al app
-      goTo('s6');
-      loadAppData();
-    } else {
-      // Tiene norte pero sin hitos → onboarding incompleto, ir a S5b
-      // Pre-llenar con el norte guardado
-      const s5bTextarea = document.getElementById('s5b-norte-textarea');
-      if (s5bTextarea) {
-        s5bTextarea.value = profile.norte;
-        checkS5bField(); // activar botones si hay contenido
-      }
-      // Contexto: onboarding (no ajuste)
-      const headerLabel = document.getElementById('s5b-header-label');
-      const title       = document.getElementById('s5b-title');
-      const subtitle    = document.getElementById('s5b-subtitle');
-      const backBtn     = document.getElementById('s5b-back-btn');
-      const cancelBtn   = document.getElementById('s5b-cancel-btn');
-      if (headerLabel) headerLabel.textContent = 'Tu norte';
-      if (title)       title.textContent       = 'Definí tu norte.';
-      if (subtitle)    subtitle.textContent    = 'Escribí tu objetivo. UP puede ayudarte a construir los hitos para llegar.';
-      if (backBtn)     backBtn.setAttribute('onclick', "goTo('s3')");
-      if (cancelBtn)   cancelBtn.setAttribute('onclick', "goTo('s3')");
-      goTo('s5b');
-    }
-  } else {
-    // Sin perfil → onboarding (pedir carrera y objetivos)
-    // Pre-llenar nombre si viene de Google
+  // C1: Sin nombre → inicio de onboarding
+  if (!profile?.name) {
     const nameInput = document.getElementById('input-name');
     if (nameInput && googleName !== 'vos') nameInput.value = googleName;
     goTo('s2');
+    return;
+  }
+
+  // C2: Tiene nombre pero sin norte → pedir objetivo
+  if (!profile.norte) {
+    updateGreetingName(firstName);
+    goTo('s3');
+    return;
+  }
+
+  // C3 / C4: Tiene norte → verificar hitos
+  const { data: hitos } = await supa
+    .from('hitos')
+    .select('id')
+    .eq('user_id', currentUser.id)
+    .limit(1);
+
+  updateGreetingName(firstName);
+
+  if (hitos && hitos.length > 0) {
+    // C4: Perfil completo → home
+    goTo('s6');
+    loadAppData();
+  } else {
+    // C3: Tiene norte pero sin hitos → S5b con contexto de onboarding
+    const s5bTextarea = document.getElementById('s5b-norte-textarea');
+    if (s5bTextarea) {
+      s5bTextarea.value = profile.norte;
+      checkS5bField();
+    }
+    const headerLabel = document.getElementById('s5b-header-label');
+    const title       = document.getElementById('s5b-title');
+    const subtitle    = document.getElementById('s5b-subtitle');
+    const backBtn     = document.getElementById('s5b-back-btn');
+    const cancelBtn   = document.getElementById('s5b-cancel-btn');
+    if (headerLabel) headerLabel.textContent = 'Tu norte';
+    if (title)       title.textContent       = 'Definí tu norte.';
+    if (subtitle)    subtitle.textContent    = 'Escribí tu objetivo. UP puede ayudarte a construir los hitos para llegar.';
+    if (backBtn)     backBtn.setAttribute('onclick', "goTo('s3')");
+    if (cancelBtn)   cancelBtn.setAttribute('onclick', "goTo('s3')");
+    goTo('s5b');
   }
 }
 
