@@ -1247,6 +1247,11 @@ body {
           <input type="text" id="hito03" class="hito-check-text" style="flex:1;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--text-primary);outline:none;caret-color:var(--accent);padding:2px 0;" placeholder="Tercer hito hacia tu norte..." />
           <span class="hito-drag-handle">⠿</span>
         </div>
+        <div class="hito-drag-row" id="hito04row" style="display:none;">
+          <span class="hito-check-num" style="font-size:11px;font-weight:700;color:var(--text-secondary);flex-shrink:0;min-width:20px;letter-spacing:0.04em;padding-top:2px;">04</span>
+          <input type="text" id="hito04" class="hito-check-text" style="flex:1;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--text-primary);outline:none;caret-color:var(--accent);padding:2px 0;" placeholder="Cuarto hito hacia tu norte..." />
+          <span class="hito-drag-handle">⠿</span>
+        </div>
       </div>
     </div>
     <!-- Fixed bottom — solo el confirmar, el back ya está en el header -->
@@ -2302,6 +2307,15 @@ function upSuggestS5b(btn) {
       const parsed = typeof resultado === 'object' ? resultado
                    : (() => { try { return JSON.parse(resultado); } catch { return null; } })();
 
+      const hito04    = document.getElementById('hito04');
+      const hito04row = document.getElementById('hito04row');
+
+      const doneFill = () => {
+        if (btn)   { btn.disabled = false; btn.style.opacity = '1'; }
+        if (label) label.textContent = 'Mejorar con UP';
+        checkS5bField();
+      };
+
       if (parsed?.objetivo) {
         typeWriterField(textarea, parsed.objetivo, 14, () => {
           if (hito01 && parsed.hitos?.[0]) typeWriterField(hito01, parsed.hitos[0], 12, () => {
@@ -2309,14 +2323,15 @@ function upSuggestS5b(btn) {
               if (hito03 && parsed.hitos?.[2]) {
                 if (hito03row) hito03row.style.display = 'flex';
                 typeWriterField(hito03, parsed.hitos[2], 12, () => {
-                  if (btn)   { btn.disabled = false; btn.style.opacity = '1'; }
-                  if (label) label.textContent = 'Mejorar con UP';
-                  checkS5bField();
+                  if (hito04 && parsed.hitos?.[3]) {
+                    if (hito04row) hito04row.style.display = 'flex';
+                    typeWriterField(hito04, parsed.hitos[3], 12, doneFill);
+                  } else {
+                    doneFill();
+                  }
                 });
               } else {
-                if (btn)   { btn.disabled = false; btn.style.opacity = '1'; }
-                if (label) label.textContent = 'Mejorar con UP';
-                checkS5bField();
+                doneFill();
               }
             });
           });
@@ -2366,9 +2381,12 @@ async function confirmarNorte() {
     );
   }
 
-  // Horizonte
-  const horizonte = document.querySelector('.horizon-pill.active')?.textContent?.trim() || '3 meses';
-  await guardarPerfil({ horizonte });
+  // Norte + Horizonte
+  const norteTexto = document.getElementById('s5b-norte-textarea')?.value?.trim();
+  const horizonte  = document.querySelector('#s5b .horizon-pill.active')?.textContent?.trim() || '3 meses';
+  const profileData = { horizonte };
+  if (norteTexto) profileData.norte = norteTexto;
+  await guardarPerfil(profileData);
 
   // Entrar al app y cargar datos reales
   goTo('s6');
