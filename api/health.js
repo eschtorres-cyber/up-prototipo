@@ -18,7 +18,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5',
+        model: 'claude-haiku-3-5-20241022',
         max_tokens: 10,
         messages: [{ role: 'user', content: 'Respondé solo: OK' }]
       })
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       status: 'ok ✅',
-      model: 'claude-haiku-4-5',
+      model: 'claude-haiku-3-5-20241022',
       response: text.trim(),
       node_version: process.version
     });

@@ -104,7 +104,7 @@ Máximo 5 logros. Solo los más significativos.`;
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5',
+        model: 'claude-haiku-3-5-20241022',
         max_tokens: 512,
         messages: [{ role: 'user', content: prompt }]
       })
