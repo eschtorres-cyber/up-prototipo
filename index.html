@@ -86,6 +86,25 @@
   to { transform: rotate(360deg); }
 }
 
+/* ── Animación divergente del diario ─────────────────
+   Cada elemento vuela hacia su propio destino y se desvanece.
+   Se setean --dx / --dy por elemento para divergencia real.  */
+@keyframes diaryItemOut {
+  0%   { opacity: 1; transform: translate(0,0) scale(1); }
+  30%  { opacity: 1; transform: translate(calc(var(--dx)*.4), calc(var(--dy)*.4)) scale(1.04); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.88); }
+}
+@keyframes diaryCardGlow {
+  0%   { box-shadow: inset 0 0 0 1.5px rgba(22,163,74,0); }
+  35%  { box-shadow: inset 0 0 0 1.5px rgba(22,163,74,0.7); }
+  100% { box-shadow: inset 0 0 0 1.5px rgba(22,163,74,0); }
+}
+.diary-saving { animation: diaryCardGlow 600ms ease forwards; }
+.diary-item-out {
+  animation: diaryItemOut 480ms var(--ease-out) forwards;
+  pointer-events: none;
+}
+
 *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
 
 body {
@@ -2356,9 +2375,61 @@ function typeWriter(text, el, speed = 28) {
   }, speed);
 }
 
+// ── Animación divergente al guardar entrada ───────────
+function triggerDiarySuccess(onDone) {
+  const card = document.querySelector('#panel-home .card-l1');
+  const textarea = document.getElementById('diary-input');
+  const chips    = document.querySelectorAll('#panel-home .energy-tags .chip');
+  const btn      = document.getElementById('btn-registrar');
+
+  // Glow verde en el borde del card
+  if (card) card.classList.add('diary-saving');
+
+  // Divergencia: cada elemento vuela en una dirección distinta
+  const targets = [
+    { el: textarea, dx: '0px',   dy: '-32px' },
+    { el: chips[0], dx: '-40px', dy: '-20px' },
+    { el: chips[1], dx: '-20px', dy: '-36px' },
+    { el: chips[2], dx: '20px',  dy: '-36px' },
+    { el: chips[3], dx: '40px',  dy: '-20px' },
+    { el: btn,      dx: '0px',   dy: '24px'  },
+  ];
+
+  targets.forEach(({ el, dx, dy }) => {
+    if (!el) return;
+    el.style.setProperty('--dx', dx);
+    el.style.setProperty('--dy', dy);
+    el.classList.add('diary-item-out');
+  });
+
+  // Reset después de la animación
+  setTimeout(() => {
+    if (card) card.classList.remove('diary-saving');
+    targets.forEach(({ el }) => {
+      if (!el) return;
+      el.classList.remove('diary-item-out');
+      el.style.opacity = '';
+      el.style.transform = '';
+    });
+    // Limpiar el form
+    if (textarea) { textarea.value = ''; textarea.style.height = '48px'; }
+    chips.forEach(c => c.classList.remove('active'));
+    if (btn) { btn.disabled = true; }
+    if (onDone) onDone();
+  }, 520);
+}
+
 async function openSynthesisSheet() {
   const txt = document.getElementById('diary-input').value.trim();
   if (txt.length > 3) document.getElementById('sheet-original-text').textContent = '"' + txt + '"';
+
+  // Animación divergente en el card + abrir sheet al mismo tiempo
+  triggerDiarySuccess(() => {
+    // nada extra al terminar, el reset ya lo hace triggerDiarySuccess
+  });
+
+  // Abrir sheet con leve delay para que la animación arranque primero (150ms)
+  await new Promise(r => setTimeout(r, 150));
   document.getElementById('sheet-overlay').classList.add('visible');
   document.getElementById('synthesis-sheet').classList.add('open');
 
