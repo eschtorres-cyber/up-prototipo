@@ -1280,8 +1280,8 @@ body {
         <textarea id="diary-input"
           style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border-subtle);
                  padding:6px 0 10px;font-family:'DM Sans',sans-serif;font-size:15px;
-                 color:var(--text-primary);outline:none;resize:none;height:48px;
-                 caret-color:var(--accent);line-height:1.6;display:block;"
+                 color:var(--text-primary);outline:none;resize:none;height:48px;overflow:hidden;
+                 caret-color:var(--accent);line-height:1.6;display:block;transition:height 120ms ease;"
           placeholder="Escribe tu reflexión del día..."
           oninput="checkDiaryInput(this)"></textarea>
         <div class="energy-tags" style="margin:10px 0 12px;">
@@ -2354,6 +2354,9 @@ function selectTag(el) {
 }
 
 function checkDiaryInput(el) {
+  // Auto-expand: se encoge a auto primero para recalcular, luego toma el scrollHeight
+  el.style.height = 'auto';
+  el.style.height = Math.max(48, el.scrollHeight) + 'px';
   document.getElementById('btn-registrar').disabled = el.value.trim().length < 3;
 }
 
