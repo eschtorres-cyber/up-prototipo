@@ -1,16 +1,14 @@
-// api/gemini.js — Vercel Serverless Function
-// La API key de Gemini vive acá, nunca en el frontend
-
+// api/gemini.js — Powered by Claude (Anthropic)
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const { tipo, datos } = req.body;
-  const GEMINI_KEY = process.env.GEMINI_API_KEY;
+  const API_KEY = process.env.ANTHROPIC_API_KEY;
 
-  if (!GEMINI_KEY) {
-    return res.status(500).json({ error: 'API key no configurada' });
+  if (!API_KEY) {
+    return res.status(500).json({ error: 'ANTHROPIC_API_KEY no configurada en Vercel' });
   }
 
   let prompt = '';
@@ -97,73 +95,49 @@ Máximo 5 logros. Solo los más significativos.`;
     return res.status(400).json({ error: 'Tipo de análisis no reconocido' });
   }
 
-  // Fallback chain: prueba modelos en orden hasta encontrar uno disponible
-  const MODELS = [
-    'gemini-2.5-flash-preview-04-17',
-    'gemini-2.0-flash-lite',
-    'gemini-1.5-flash-latest',
-    'gemini-1.5-flash',
-  ];
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 512,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
 
-  let lastError = '';
-
-  for (const model of MODELS) {
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 512 }
-          })
-        }
-      );
-
-      // 404 / 400 = modelo no disponible → probar el siguiente
-      if (response.status === 404 || response.status === 400) {
-        const errBody = await response.text();
-        lastError = `${model} → ${response.status}`;
-        console.warn(`Model ${model} unavailable:`, errBody.slice(0, 120));
-        continue;
-      }
-
-      if (!response.ok) {
-        const errBody = await response.text();
-        console.error(`Gemini ${model} error ${response.status}:`, errBody.slice(0, 200));
-        return res.status(502).json({ error: `Gemini error ${response.status} (${model})` });
-      }
-
-      const result = await response.json();
-      const text = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-      if (!text) {
-        console.error(`Gemini ${model} empty response:`, JSON.stringify(result).slice(0, 200));
-        continue;
-      }
-
-      console.log(`Gemini responded with model: ${model}`);
-
-      // Para respuestas JSON intentar parsear
-      if (['mejorar_norte', 'resumen_semanal', 'detectar_logros'].includes(tipo)) {
-        try {
-          const json = JSON.parse(text.replace(/```json\n?|\n?```/g, '').trim());
-          return res.status(200).json({ resultado: json, model });
-        } catch {
-          return res.status(200).json({ resultado: text, model });
-        }
-      }
-
-      return res.status(200).json({ resultado: text, model });
-
-    } catch (error) {
-      lastError = `${model} → ${error.message}`;
-      console.error(`Gemini fetch error (${model}):`, error.message);
-      continue;
+    if (!response.ok) {
+      const errBody = await response.text();
+      console.error('Anthropic error:', response.status, errBody);
+      return res.status(502).json({ error: `Anthropic error ${response.status}: ${errBody.slice(0, 200)}` });
     }
-  }
 
-  // Todos los modelos fallaron
-  return res.status(502).json({ error: `Ningún modelo disponible. Último error: ${lastError}` });
+    const result = await response.json();
+    const text = result.content?.[0]?.text || '';
+
+    if (!text) {
+      console.error('Anthropic empty response:', JSON.stringify(result));
+      return res.status(502).json({ error: 'Respuesta vacía de Claude' });
+    }
+
+    // Para respuestas JSON intentar parsear
+    if (['mejorar_norte', 'resumen_semanal', 'detectar_logros'].includes(tipo)) {
+      try {
+        const json = JSON.parse(text.replace(/```json\n?|\n?```/g, '').trim());
+        return res.status(200).json({ resultado: json });
+      } catch {
+        return res.status(200).json({ resultado: text });
+      }
+    }
+
+    return res.status(200).json({ resultado: text });
+
+  } catch (error) {
+    console.error('Anthropic fetch error:', error);
+    return res.status(500).json({ error: 'Error al llamar a Claude: ' + error.message });
+  }
 }
