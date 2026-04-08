@@ -2307,38 +2307,32 @@ function upSuggestS5b(btn) {
       const parsed = typeof resultado === 'object' ? resultado
                    : (() => { try { return JSON.parse(resultado); } catch { return null; } })();
 
-      const hito04    = document.getElementById('hito04');
-      const hito04row = document.getElementById('hito04row');
+      if (!parsed?.objetivo || !parsed?.hitos?.length) throw new Error('formato inesperado');
 
-      const doneFill = () => {
-        if (btn)   { btn.disabled = false; btn.style.opacity = '1'; }
-        if (label) label.textContent = 'Mejorar con UP';
-        checkS5bField();
+      const container = document.getElementById('hitos-ajustar-container');
+
+      // Renderizar dinámicamente los hitos que devuelva la IA (2-6)
+      container.innerHTML = parsed.hitos.map((_, i) => `
+        <div class="hito-drag-row">
+          <span class="hito-check-num" style="font-size:11px;font-weight:700;color:var(--text-secondary);flex-shrink:0;min-width:20px;letter-spacing:0.04em;padding-top:2px;">${String(i+1).padStart(2,'0')}</span>
+          <input type="text" class="hito-check-text" data-hito-idx="${i}" style="flex:1;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--text-primary);outline:none;caret-color:var(--accent);padding:2px 0;" placeholder="Hito ${i+1}..." />
+          <span class="hito-drag-handle">⠿</span>
+        </div>`).join('');
+
+      const inputs = container.querySelectorAll('input[type="text"]');
+
+      // Typewriter encadenado sobre inputs dinámicos
+      const fillNext = (idx) => {
+        if (idx >= inputs.length) {
+          if (btn)   { btn.disabled = false; btn.style.opacity = '1'; }
+          if (label) label.textContent = 'Mejorar con UP';
+          checkS5bField();
+          return;
+        }
+        typeWriterField(inputs[idx], parsed.hitos[idx], 12, () => fillNext(idx + 1));
       };
 
-      if (parsed?.objetivo) {
-        typeWriterField(textarea, parsed.objetivo, 14, () => {
-          if (hito01 && parsed.hitos?.[0]) typeWriterField(hito01, parsed.hitos[0], 12, () => {
-            if (hito02 && parsed.hitos?.[1]) typeWriterField(hito02, parsed.hitos[1], 12, () => {
-              if (hito03 && parsed.hitos?.[2]) {
-                if (hito03row) hito03row.style.display = 'flex';
-                typeWriterField(hito03, parsed.hitos[2], 12, () => {
-                  if (hito04 && parsed.hitos?.[3]) {
-                    if (hito04row) hito04row.style.display = 'flex';
-                    typeWriterField(hito04, parsed.hitos[3], 12, doneFill);
-                  } else {
-                    doneFill();
-                  }
-                });
-              } else {
-                doneFill();
-              }
-            });
-          });
-        });
-      } else {
-        throw new Error('formato inesperado');
-      }
+      typeWriterField(textarea, parsed.objetivo, 14, () => fillNext(0));
 
     } catch {
       if (btn)   { btn.disabled = false; btn.style.opacity = '1'; }

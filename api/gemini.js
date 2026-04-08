@@ -42,17 +42,22 @@ Entrada de hoy: "${texto}"
 Objetivo en bruto: "${objetivo}"
 Horizonte: ${horizonte || '3 meses'}
 
-Devolvé este JSON. Sin palabras de relleno. Sin frases largas.
+Evaluá la complejidad del objetivo y el horizonte de tiempo para decidir cuántos hitos son necesarios:
+- 1 mes → 2 hitos (foco total, ejecución inmediata)
+- 3 meses → 3-4 hitos (equilibrio entre estrategia y ejecución)
+- 6 meses → 4-5 hitos (progresión clara con hitos de validación)
+- 1 año → 5-6 hitos (milestones estratégicos que marcan etapas)
+Si el objetivo es muy acotado, menos hitos. Si es transformacional, más.
+
+Devolvé este JSON:
 {
   "objetivo": "1 oración. Qué vas a lograr y para qué. Máx 15 palabras.",
   "hitos": [
-    "acción concreta. verbo + resultado. máx 8 palabras.",
-    "acción concreta. verbo + resultado. máx 8 palabras.",
-    "acción concreta. verbo + resultado. máx 8 palabras.",
-    "acción concreta. verbo + resultado. máx 8 palabras."
+    "verbo + resultado concreto. máx 8 palabras.",
+    "verbo + resultado concreto. máx 8 palabras."
   ]
 }
-4 hitos. Cada uno debe poder leerse en 3 segundos.`;
+Cada hito debe poder leerse en 3 segundos. Sin explicaciones extra.`;
   }
 
   // ── 3. RESUMEN SEMANAL EJECUTIVO ──────────────────────
