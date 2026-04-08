@@ -1296,7 +1296,7 @@ body {
         <p id="home-norte-text" style="font-size:15px;font-weight:600;line-height:1.4;color:var(--text-primary);margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">Tu norte aparecerá acá.</p>
         <div style="border-top:1px solid var(--border-subtle);padding-top:12px;margin-bottom:14px;">
           <p style="font-size:11px;font-weight:500;color:var(--text-label);margin-bottom:4px;">Próximo hito</p>
-          <p id="home-hito-one" style="font-size:14px;font-weight:500;color:var(--text-primary);line-height:1.4;">Completá el onboarding para ver tus hitos.</p>
+          <p id="home-hito-one" style="font-size:14px;font-weight:500;color:var(--text-primary);line-height:1.4;">—</p>
         </div>
         <div style="height:2px;background:rgba(255,255,255,0.08);border-radius:1px;overflow:hidden;">
           <div id="card-progress-bar" style="height:100%;width:0%;background:var(--accent);border-radius:1px;transition:width 1s var(--ease-out);"></div>
@@ -1425,7 +1425,7 @@ body {
         <p style="font-size:15px;font-weight:600;color:var(--text-primary);flex:1;">Tu diario</p>
       </div>
 
-      <h1 style="font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.1;color:var(--text-primary);margin-bottom:6px;">295 entradas.</h1>
+      <h1 style="font-size:34px;font-weight:700;letter-spacing:-0.025em;line-height:1.1;color:var(--text-primary);margin-bottom:6px;"><span id="diario-total-entradas">0</span> entradas.</h1>
       <p style="font-size:14px;color:var(--text-secondary);margin-bottom:20px;line-height:1.5;">Todo lo que registraste, organizado por UP.</p>
 
       <!-- Filtros -->
@@ -1545,19 +1545,19 @@ body {
           <text x="153" y="93"  fill="rgba(255,255,255,0.28)" font-size="8" font-family="DM Sans,sans-serif">20</text>
           <text x="164" y="73"  fill="rgba(255,255,255,0.28)" font-size="8" font-family="DM Sans,sans-serif">30</text>
           <text x="175" y="54"  fill="rgba(255,255,255,0.28)" font-size="8" font-family="DM Sans,sans-serif">40</text>
-          <!-- Polygon fill -->
-          <polygon points="130,51 189,96 204,173 130,202 75,162 66,93"
-            fill="rgba(22,163,74,0.13)" stroke="none"/>
-          <!-- Polygon stroke neon green -->
-          <polygon points="130,51 189,96 204,173 130,202 75,162 66,93"
-            fill="none" stroke="#4ade80" stroke-width="1.5" stroke-linejoin="round"/>
+          <!-- Polygon fill — dinámico desde entradas -->
+          <polygon id="radar-fill" points="130,130 130,130 130,130 130,130 130,130 130,130"
+            fill="rgba(22,163,74,0.13)" stroke="none" style="transition:points 800ms ease"/>
+          <!-- Polygon stroke -->
+          <polygon id="radar-stroke" points="130,130 130,130 130,130 130,130 130,130 130,130"
+            fill="none" stroke="#4ade80" stroke-width="1.5" stroke-linejoin="round" style="transition:points 800ms ease"/>
           <!-- Vertex dots -->
-          <circle cx="130" cy="51"  r="3" fill="#4ade80"/>
-          <circle cx="189" cy="96"  r="3" fill="#4ade80"/>
-          <circle cx="204" cy="173" r="3" fill="#4ade80"/>
-          <circle cx="130" cy="202" r="3" fill="#4ade80"/>
-          <circle cx="75"  cy="162" r="3" fill="#4ade80"/>
-          <circle cx="66"  cy="93"  r="3" fill="#4ade80"/>
+          <circle id="radar-dot-0" cx="130" cy="130" r="3" fill="#4ade80" style="transition:cx 800ms ease,cy 800ms ease"/>
+          <circle id="radar-dot-1" cx="130" cy="130" r="3" fill="#4ade80" style="transition:cx 800ms ease,cy 800ms ease"/>
+          <circle id="radar-dot-2" cx="130" cy="130" r="3" fill="#4ade80" style="transition:cx 800ms ease,cy 800ms ease"/>
+          <circle id="radar-dot-3" cx="130" cy="130" r="3" fill="#4ade80" style="transition:cx 800ms ease,cy 800ms ease"/>
+          <circle id="radar-dot-4" cx="130" cy="130" r="3" fill="#4ade80" style="transition:cx 800ms ease,cy 800ms ease"/>
+          <circle id="radar-dot-5" cx="130" cy="130" r="3" fill="#4ade80" style="transition:cx 800ms ease,cy 800ms ease"/>
           <!-- Center diamond -->
           <path d="M130,124 L136,130 L130,136 L124,130 Z" fill="#4ade80" opacity="0.85"/>
           <!-- Axis labels -->
@@ -1584,13 +1584,25 @@ body {
     <div class="scroll-content tab-panel" id="panel-perfil" style="padding:16px 24px 120px;">
       <h1 style="font-size:32px;font-weight:700;letter-spacing:-0.02em;color:var(--text-primary);margin-bottom:24px;line-height:1.15;">Tu Perfil</h1>
 
-      <!-- Trayectoria Experiencial — síntesis IA del perfil profesional -->
-      <div class="card-l2" style="border-color:rgba(22,163,74,0.18);margin-bottom:24px;">
+      <!-- Trayectoria Experiencial — visible solo con 5+ entradas -->
+      <div id="card-trayectoria" class="card-l2" style="border-color:rgba(22,163,74,0.18);margin-bottom:24px;display:none;">
         <div class="ai-label" style="margin-bottom:12px;">
           <div class="spark-dot"></div>
           Trayectoria Experiencial
         </div>
-        <p style="font-size:14px;line-height:1.75;color:var(--text-primary);">Has consolidado un aumento del <strong style="color:var(--accent);">22%</strong> en impacto estratégico este trimestre. Tu perfil destaca por la intersección entre liderazgo técnico y visión de producto, posicionándote en el percentil superior para roles de Dirección en el sector fintech.</p>
+        <p id="trayectoria-texto" style="font-size:14px;line-height:1.75;color:var(--text-primary);">UP está construyendo tu perfil...</p>
+      </div>
+      <!-- Empty state trayectoria — visible hasta 5 entradas -->
+      <div id="card-trayectoria-empty" class="card-l2" style="border-color:var(--border-subtle);margin-bottom:24px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--text-placeholder);"></div>
+          <p style="font-size:12px;font-weight:600;color:var(--text-secondary);letter-spacing:0.04em;">TRAYECTORIA EXPERIENCIAL</p>
+        </div>
+        <p id="trayectoria-empty-texto" style="font-size:14px;color:var(--text-secondary);line-height:1.65;">UP necesita al menos <strong style="color:var(--text-primary);">5 entradas</strong> para analizar tu perfil. Seguí registrando tu semana.</p>
+        <div style="margin-top:14px;background:var(--surface-1);border-radius:var(--r-sm);overflow:hidden;height:4px;">
+          <div id="trayectoria-progress" style="height:100%;background:var(--accent);border-radius:var(--r-sm);width:0%;transition:width 600ms ease;"></div>
+        </div>
+        <p id="trayectoria-progress-label" style="font-size:11px;color:var(--text-secondary);margin-top:6px;">0 / 5 entradas</p>
       </div>
 
       <!-- Stats -->
@@ -2021,18 +2033,20 @@ async function loadAppData() {
       updateNorteProgress();
     }
   } else {
-    // Sin hitos: mostrar empty state con CTA
+    // Sin hitos → CTA accionable en home card
     const homeHitoOne = document.getElementById('home-hito-one');
-    if (homeHitoOne) homeHitoOne.textContent = 'Todavía no definiste hitos.';
+    if (homeHitoOne) {
+      homeHitoOne.innerHTML = `<button onclick="irADefinirHitos()" style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--accent);background:none;border:1px solid rgba(22,163,74,0.3);border-radius:var(--r-full);padding:6px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;">+ Definir hitos →</button>`;
+    }
 
+    // Panel Norte: empty state con CTA
     const container = document.getElementById('norte-hitos-container');
     if (container) {
       container.innerHTML = `
-        <div style="padding:16px 0;text-align:center;">
-          <p style="font-size:14px;color:var(--text-secondary);margin-bottom:12px;">Todavía no definiste tus hitos.</p>
-          <button onclick="switchTab('agregar-objetivo')" style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;padding:8px 16px;border:1px solid rgba(22,163,74,0.3);border-radius:var(--r-full);">+ Definir hitos</button>
-        </div>
-      `;
+        <div style="padding:20px 0;text-align:center;">
+          <p style="font-size:14px;color:var(--text-secondary);margin-bottom:14px;line-height:1.5;">Todavía no tenés hitos definidos.<br>UP los usa para medir tu avance.</p>
+          <button onclick="irADefinirHitos()" style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--accent);background:rgba(22,163,74,0.07);border:1px solid rgba(22,163,74,0.3);border-radius:var(--r-full);padding:10px 20px;cursor:pointer;-webkit-tap-highlight-color:transparent;">Definir mis hitos →</button>
+        </div>`;
     }
   }
 
@@ -2059,26 +2073,64 @@ async function loadAppData() {
   }
 }
 
-// ── S5b: activar botones cuando hay contenido ────────
+/// ── Ir a definir hitos desde home ────────────────────
+function irADefinirHitos() {
+  // Pre-cargar el norte actual en S5b
+  if (currentUser) {
+    supa.from('profiles').select('norte').eq('id', currentUser.id).single().then(({ data }) => {
+      const textarea = document.getElementById('s5b-norte-textarea');
+      if (textarea && data?.norte) {
+        textarea.value = data.norte;
+        checkS5bField();
+      }
+    });
+  }
+  const headerLabel = document.getElementById('s5b-header-label');
+  const title       = document.getElementById('s5b-title');
+  const subtitle    = document.getElementById('s5b-subtitle');
+  const backBtn     = document.getElementById('s5b-back-btn');
+  const cancelBtn   = document.getElementById('s5b-cancel-btn');
+  if (headerLabel) headerLabel.textContent = 'Tus hitos';
+  if (title)       title.textContent       = 'Definí tus hitos.';
+  if (subtitle)    subtitle.textContent    = 'Los hitos son los pasos concretos hacia tu norte. UP puede ayudarte a definirlos.';
+  if (backBtn)     backBtn.setAttribute('onclick', "switchTab('norte')");
+  if (cancelBtn)   cancelBtn.setAttribute('onclick', "switchTab('norte')");
+  goTo('s5b');
+}
+
+// ── S5b casuísticas ───────────────────────────────────
+// C-A: Sin norte                → IA deshabilitada, Confirmar deshabilitado
+// C-B: Con norte, sin hitos     → IA activa, Confirmar activo (guarda solo norte)
+// C-C: Con norte + hitos        → IA activa, Confirmar activo (guarda todo)
+// Los hitos son OPCIONALES — el norte es el mínimo requerido
 function checkS5bField() {
   const val = document.getElementById('s5b-norte-textarea')?.value?.trim() || '';
-  const hasContent = val.length >= 8;
+  const hasNorte = val.length >= 8;
 
-  const upBtn       = document.getElementById('s5b-up-btn');
+  const upBtn        = document.getElementById('s5b-up-btn');
   const confirmarBtn = document.getElementById('s5b-confirmar-btn');
 
+  // Botón "Mejorar con UP" — requiere norte escrito
   if (upBtn) {
-    upBtn.disabled          = !hasContent;
-    upBtn.style.opacity     = hasContent ? '1' : '0.45';
-    upBtn.style.cursor      = hasContent ? 'pointer' : 'not-allowed';
-    upBtn.style.color       = hasContent ? 'var(--accent)' : 'var(--text-secondary)';
-    upBtn.style.borderColor = hasContent ? 'rgba(22,163,74,0.4)' : 'var(--border-default)';
-    upBtn.style.background  = hasContent ? 'rgba(22,163,74,0.07)' : 'var(--surface-2)';
+    upBtn.disabled          = !hasNorte;
+    upBtn.style.opacity     = hasNorte ? '1' : '0.45';
+    upBtn.style.cursor      = hasNorte ? 'pointer' : 'not-allowed';
+    upBtn.style.color       = hasNorte ? 'var(--accent)' : 'var(--text-secondary)';
+    upBtn.style.borderColor = hasNorte ? 'rgba(22,163,74,0.4)' : 'var(--border-default)';
+    upBtn.style.background  = hasNorte ? 'rgba(22,163,74,0.07)' : 'var(--surface-2)';
   }
+
+  // Botón "Confirmar" — requiere solo norte (hitos opcionales)
   if (confirmarBtn) {
-    confirmarBtn.disabled      = !hasContent;
-    confirmarBtn.style.opacity = hasContent ? '1' : '0.45';
-    confirmarBtn.style.cursor  = hasContent ? 'pointer' : 'not-allowed';
+    confirmarBtn.disabled      = !hasNorte;
+    confirmarBtn.style.opacity = hasNorte ? '1' : '0.45';
+    confirmarBtn.style.cursor  = hasNorte ? 'pointer' : 'not-allowed';
+    // Texto dinámico según si hay hitos o no
+    const hitos = document.querySelectorAll('#hitos-ajustar-container input[type="text"]');
+    const tieneHitos = Array.from(hitos).some(h => h.value.trim().length > 0);
+    confirmarBtn.textContent = hasNorte && !tieneHitos
+      ? 'Confirmar norte (sin hitos)'
+      : 'Confirmar mi norte';
   }
 }
 
@@ -2459,6 +2511,64 @@ function switchTab(name) {
   if (name === 'perfil')    loadPerfilData();
 }
 
+// ── Radar de competencias dinámico ───────────────────
+// Ejes: 0=Liderazgo, 1=Estrategia, 2=Ejecución, 3=Técnico, 4=Comunicación, 5=Influencia
+// Ángulos: empiezan en -90° (top) girando 60° por eje
+// Mapeo de tags → ejes:
+//   Tracción   → Liderazgo(0) + Ejecución(2)
+//   Aprendizaje→ Estrategia(1) + Técnico(3)
+//   Fricción   → Comunicación(4) + Influencia(5)
+//   Rutina     → Ejecución(2)
+function calcularScoresRadar(entradas) {
+  const scores = [0, 0, 0, 0, 0, 0]; // 6 ejes
+  const TAG_MAP = {
+    'tracción':    [0, 2],
+    'traccion':    [0, 2],
+    'aprendizaje': [1, 3],
+    'fricción':    [4, 5],
+    'friccion':    [4, 5],
+    'rutina':      [2],
+  };
+  const counts = [0, 0, 0, 0, 0, 0];
+
+  entradas.forEach(e => {
+    const tags = (e.tags || []).map(t => t.toLowerCase());
+    if (tags.length === 0) { counts[2]++; return; } // sin tag → Ejecución
+    tags.forEach(tag => {
+      const axes = TAG_MAP[tag] || [2];
+      axes.forEach(ax => counts[ax]++);
+    });
+  });
+
+  // Escalar: cada 3 entradas = 25% del radio, cap en 90
+  counts.forEach((c, i) => {
+    scores[i] = Math.min(Math.round((c / Math.max(entradas.length, 1)) * 90 * 1.4), 90);
+    if (entradas.length === 0) scores[i] = 0;
+  });
+  return scores;
+}
+
+function updateRadarChart(scores) {
+  const cx = 130, cy = 130;
+  const points = scores.map((s, i) => {
+    const angle = (-Math.PI / 2) + (Math.PI / 3) * i;
+    const x = cx + s * Math.cos(angle);
+    const y = cy + s * Math.sin(angle);
+    return { x: parseFloat(x.toFixed(1)), y: parseFloat(y.toFixed(1)) };
+  });
+
+  const ptStr = points.map(p => `${p.x},${p.y}`).join(' ');
+  const fill   = document.getElementById('radar-fill');
+  const stroke = document.getElementById('radar-stroke');
+  if (fill)   fill.setAttribute('points', ptStr);
+  if (stroke) stroke.setAttribute('points', ptStr);
+
+  points.forEach((p, i) => {
+    const dot = document.getElementById(`radar-dot-${i}`);
+    if (dot) { dot.setAttribute('cx', p.x); dot.setAttribute('cy', p.y); }
+  });
+}
+
 // ── Helpers de fecha ─────────────────────────────────
 function formatFechaRelativa(dateStr) {
   const d = new Date(dateStr);
@@ -2514,6 +2624,13 @@ async function loadEvolucionData() {
   if (elPalabras) elPalabras.textContent = palabras;
   if (elEntradas) elEntradas.textContent = total;
 
+  // También actualizar contador del tab Diario
+  const elDiarioTotal = document.getElementById('diario-total-entradas');
+  if (elDiarioTotal) elDiarioTotal.textContent = total;
+
+  // Radar dinámico — se anima desde el centro hacia los scores reales
+  setTimeout(() => updateRadarChart(calcularScoresRadar(lista)), 300);
+
   // Entradas recientes
   const container = document.getElementById('entradas-recientes-container');
   if (container) {
@@ -2552,10 +2669,42 @@ async function loadPerfilData() {
   const palabras = contarPalabras(lista);
   const racha = calcularDiasActivos(lista);
 
-  const elRacha   = document.getElementById('stat-racha');
-  const elPalab   = document.getElementById('stat-palabras-perfil');
+  const elRacha = document.getElementById('stat-racha');
+  const elPalab = document.getElementById('stat-palabras-perfil');
   if (elRacha) elRacha.textContent = racha;
   if (elPalab) elPalab.textContent = palabras;
+
+  // Trayectoria Experiencial — se desbloquea con 5+ entradas
+  const MIN_ENTRADAS = 5;
+  const total = lista.length;
+  const cardReal  = document.getElementById('card-trayectoria');
+  const cardEmpty = document.getElementById('card-trayectoria-empty');
+  const progressBar   = document.getElementById('trayectoria-progress');
+  const progressLabel = document.getElementById('trayectoria-progress-label');
+
+  if (total >= MIN_ENTRADAS) {
+    if (cardReal)  cardReal.style.display  = 'block';
+    if (cardEmpty) cardEmpty.style.display = 'none';
+    // Texto dinámico basado en días activos
+    const textoEl = document.getElementById('trayectoria-texto');
+    if (textoEl) {
+      textoEl.innerHTML = `Llevas <strong style="color:var(--accent);">${racha} días activos</strong> registrando tu carrera. UP está detectando tus patrones de crecimiento. Seguí escribiendo para ver tu perfil profesional completo.`;
+    }
+  } else {
+    if (cardReal)  cardReal.style.display  = 'none';
+    if (cardEmpty) cardEmpty.style.display = 'block';
+    const pct = Math.round((total / MIN_ENTRADAS) * 100);
+    if (progressBar)   progressBar.style.width = `${pct}%`;
+    if (progressLabel) progressLabel.textContent = `${total} / ${MIN_ENTRADAS} entradas`;
+    // Texto motivador según cuánto falta
+    const emptyTexto = document.getElementById('trayectoria-empty-texto');
+    if (emptyTexto) {
+      const faltan = MIN_ENTRADAS - total;
+      emptyTexto.innerHTML = total === 0
+        ? `UP necesita al menos <strong style="color:var(--text-primary);">5 entradas</strong> para analizar tu perfil. Escribí tu primera reflexión del día.`
+        : `Te faltan <strong style="color:var(--text-primary);">${faltan} entrada${faltan > 1 ? 's' : ''}</strong> para que UP pueda analizar tu trayectoria.`;
+    }
+  }
 
   // Cargar logros
   const { data: logros } = await supa
@@ -2742,19 +2891,76 @@ function closeLogroSheet() {
 }
 
 // ── Exportar inteligencia ────────────────────────────
-function exportarInteligencia(btn) {
-  btn.textContent = '✦ Preparando exportación...';
+async function exportarInteligencia(btn) {
+  if (!currentUser) { showToast('Tenés que estar logueado'); return; }
+
+  btn.textContent = '✦ Preparando...';
   btn.style.opacity = '0.6';
-  setTimeout(() => {
-    btn.textContent = '✓ Exportado a tu email';
+
+  try {
+    // Cargar datos del usuario
+    const [{ data: profile }, { data: hitos }, { data: entradas }, { data: logros }] = await Promise.all([
+      supa.from('profiles').select('name, role, norte, horizonte').eq('id', currentUser.id).single(),
+      supa.from('hitos').select('texto, completado').eq('user_id', currentUser.id).order('orden'),
+      supa.from('entradas').select('texto, tags, created_at, sintesis_up').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(10),
+      supa.from('logros').select('titulo, descripcion').eq('user_id', currentUser.id)
+    ]);
+
+    const nombre  = profile?.name || 'Usuario';
+    const email   = currentUser.email || '';
+    const fecha   = new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    let body = `MI INTELIGENCIA UP — ${nombre}\n${fecha}\n`;
+    body += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+    if (profile?.norte) {
+      body += `🎯 MI NORTE\n${profile.norte}\nHorizonte: ${profile.horizonte || '—'}\n\n`;
+    }
+
+    if (hitos?.length) {
+      body += `📍 MIS HITOS\n`;
+      hitos.forEach((h, i) => {
+        body += `${String(i+1).padStart(2,'0')}. [${h.completado ? '✓' : ' '}] ${h.texto}\n`;
+      });
+      body += '\n';
+    }
+
+    if (logros?.length) {
+      body += `🏆 MIS LOGROS\n`;
+      logros.forEach(l => { body += `• ${l.titulo}: ${l.descripcion || ''}\n`; });
+      body += '\n';
+    }
+
+    if (entradas?.length) {
+      body += `📓 ÚLTIMAS ENTRADAS\n`;
+      entradas.slice(0, 5).forEach(e => {
+        const fecha = new Date(e.created_at).toLocaleDateString('es-AR');
+        body += `[${fecha}] ${e.texto}\n`;
+        if (e.sintesis_up) body += `  ↳ UP: ${e.sintesis_up}\n`;
+        body += '\n';
+      });
+    }
+
+    body += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nGenerado por UP · up-prototipo.vercel.app`;
+
+    const subject = encodeURIComponent(`Mi inteligencia UP — ${nombre} · ${fecha}`);
+    const bodyEncoded = encodeURIComponent(body);
+    window.location.href = `mailto:${email}?subject=${subject}&body=${bodyEncoded}`;
+
+    btn.textContent = '✓ Abriendo tu email...';
     btn.style.opacity = '1';
     btn.style.background = 'rgba(22,163,74,0.15)';
-    showToast('Inteligencia exportada · Revisá tu email');
+
     setTimeout(() => {
       btn.textContent = 'Exportar inteligencia';
       btn.style.background = 'rgba(22,163,74,0.08)';
     }, 3000);
-  }, 1400);
+
+  } catch {
+    btn.textContent = 'Exportar inteligencia';
+    btn.style.opacity = '1';
+    showToast('No se pudo exportar. Intentá de nuevo.');
+  }
 }
 
 // ── Configuración: toggle notificaciones ─────────────
