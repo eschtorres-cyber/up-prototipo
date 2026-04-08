@@ -2041,7 +2041,7 @@ async function loadAppData() {
     const container = document.getElementById('norte-hitos-container');
     if (container) {
       container.innerHTML = hitos.map((h, i) => `
-        <div class="hito-check-row" onclick="toggleHitoCheck(this)">
+        <div class="hito-check-row" data-hito-id="${h.id}" onclick="toggleHitoCheck(this)">
           <span class="hito-num-label">${String(i+1).padStart(2,'0')}</span>
           <p class="hito-check-text${h.completado ? ' done' : ''}">${h.texto}</p>
           <div class="hito-check-circle${h.completado ? ' done' : ''}">
@@ -2050,6 +2050,13 @@ async function loadAppData() {
         </div>
       `).join('');
       updateNorteProgress();
+      // Actualizar progress bar de la home card con datos reales
+      const completados = hitos.filter(h => h.completado).length;
+      const pct = Math.round((completados / hitos.length) * 100);
+      const bar = document.getElementById('card-progress-bar');
+      const lbl = document.getElementById('card-progress-label');
+      if (bar) setTimeout(() => { bar.style.width = `${pct}%`; }, 300);
+      if (lbl) lbl.textContent = `${pct}% · ${calcularHorizonteChip(profile.horizonte)}`;
     }
   } else {
     // Sin hitos → CTA accionable en home card
@@ -2069,7 +2076,7 @@ async function loadAppData() {
     }
   }
 
-  // 3. Mostrar resumen semanal solo si hay resumenes reales
+  // 3. Mostrar resumen semanal o CTA para generarlo
   const { data: resumenes } = await supa
     .from('resumenes')
     .select('id, semana, intencion, avances')
@@ -2080,15 +2087,81 @@ async function loadAppData() {
   const cardResumen = document.getElementById('card-resumen-semanal');
   if (cardResumen && resumenes && resumenes.length > 0) {
     const r = resumenes[0];
-    // Texto de la card
-    const textoResumen = r.intencion || 'Tu semana tiene avances registrados.';
-    const pEl = cardResumen.querySelector('p');
-    if (pEl) pEl.textContent = textoResumen;
-    // Fecha dinámica con conteo de avances
-    const fechaEl = document.getElementById('resumen-card-fecha');
-    const countAvances = Array.isArray(r.avances) ? r.avances.length : 0;
-    if (fechaEl && r.semana) fechaEl.textContent = `${r.semana} · ${countAvances} avances`;
+    // Restaurar card en modo "ver resumen"
+    cardResumen.onclick = openResumenSheet;
+    cardResumen.innerHTML = `
+      <div class="ai-label" style="margin-bottom:10px;">
+        <div class="spark-dot"></div>
+        Resumen de la semana
+      </div>
+      <p style="font-size:15px;font-weight:600;line-height:1.4;color:var(--text-primary);">${r.intencion || 'Tu semana tiene avances registrados.'}</p>
+      <div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;">
+        <span id="resumen-card-fecha" style="font-size:12px;color:var(--text-secondary);">${r.semana} · ${Array.isArray(r.avances) ? r.avances.length : 0} avances</span>
+        <span style="font-size:12px;color:var(--accent);font-weight:600;">Ver resumen →</span>
+      </div>`;
     cardResumen.style.display = 'block';
+  } else if (cardResumen) {
+    // Sin resumen aún — mostrar CTA de generación si hay entradas esta semana
+    const { data: entradasSemana } = await supa
+      .from('entradas')
+      .select('id')
+      .eq('user_id', currentUser.id)
+      .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+    if (entradasSemana && entradasSemana.length >= 2) {
+      cardResumen.onclick = null;
+      cardResumen.innerHTML = `
+        <div class="ai-label" style="margin-bottom:10px;">
+          <div class="spark-dot"></div>
+          Resumen de la semana
+        </div>
+        <p style="font-size:14px;color:var(--text-secondary);line-height:1.5;margin-bottom:14px;">Tenés ${entradasSemana.length} entradas esta semana. UP puede sintetizarlas.</p>
+        <button id="btn-generar-resumen" onclick="generarResumenSemanal(this)" style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--accent);background:rgba(22,163,74,0.07);border:1px solid rgba(22,163,74,0.3);border-radius:var(--r-full);padding:10px 20px;cursor:pointer;-webkit-tap-highlight-color:transparent;width:100%;">Generar resumen →</button>`;
+      cardResumen.style.display = 'block';
+    }
+  }
+}
+
+async function generarResumenSemanal(btn) {
+  if (!currentUser) return;
+  btn.textContent = '✦ Generando...';
+  btn.style.opacity = '0.6';
+  btn.disabled = true;
+  try {
+    const [{ data: profile }, { data: entradas }] = await Promise.all([
+      supa.from('profiles').select('norte, role').eq('id', currentUser.id).single(),
+      supa.from('entradas').select('texto, tags').eq('user_id', currentUser.id)
+        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .order('created_at', { ascending: true })
+    ]);
+    const now = new Date();
+    const semana = `${now.getFullYear()}-W${String(Math.ceil((now - new Date(now.getFullYear(), 0, 1)) / 604800000)).padStart(2,'0')}`;
+    const res = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo: 'resumen_semanal', datos: { entradas: entradas || [], norte: profile?.norte, rol: profile?.role } })
+    });
+    const { resultado } = await res.json();
+    if (resultado && typeof resultado === 'object') {
+      await supa.from('resumenes').insert({
+        user_id: currentUser.id,
+        semana,
+        avances: resultado.avances || [],
+        para_llevar: resultado.para_llevar || [],
+        intencion: resultado.intencion || ''
+      });
+      showToast('Resumen generado ✓');
+      await loadAppData(); // Refresca la card
+    } else {
+      showToast('No se pudo generar. Intentá de nuevo.');
+      btn.textContent = 'Generar resumen →';
+      btn.style.opacity = '1';
+      btn.disabled = false;
+    }
+  } catch {
+    showToast('Error al generar. Intentá de nuevo.');
+    btn.textContent = 'Generar resumen →';
+    btn.style.opacity = '1';
+    btn.disabled = false;
   }
 }
 
@@ -2485,16 +2558,30 @@ function closeSheet() {
   document.getElementById('saved-msg').style.opacity = '0';
 }
 
-function saveToProfile() {
-  document.getElementById('saved-msg').style.opacity = '1';
+async function saveToProfile() {
+  const synthesis = document.getElementById('typewriter-output')?.textContent?.trim();
+  const savedMsg = document.getElementById('saved-msg');
+  if (!synthesis || !currentUser) {
+    if (savedMsg) { savedMsg.textContent = 'Ya guardado ✓'; savedMsg.style.opacity = '1'; }
+    setTimeout(() => closeSheet(), 1500);
+    return;
+  }
+  // Guardar síntesis como logro en Supabase
+  const titulo = synthesis.length > 80 ? synthesis.slice(0, 77) + '…' : synthesis;
+  const { error } = await supa.from('logros').insert({
+    user_id: currentUser.id,
+    titulo,
+    descripcion: synthesis
+  });
+  if (savedMsg) {
+    savedMsg.textContent = error ? 'Error al guardar. Intentá de nuevo.' : 'Guardado en tu perfil ✓';
+    savedMsg.style.opacity = '1';
+  }
   setTimeout(() => closeSheet(), 1800);
 }
 
 function initHomeAnimations() {
-  const bar = document.getElementById('card-progress-bar');
-  if (bar) bar.style.width = '12%';
-  const lbl = document.getElementById('card-progress-label');
-  if (lbl) lbl.textContent = '12% · Q3 2026';
+  // Progress bar y label son actualizados por loadAppData con datos reales
 }
 
 function setGreeting() {
@@ -2527,6 +2614,12 @@ function toggleHitoCheck(row) {
   setTimeout(() => circle.classList.remove('bounce'), 380);
   // Actualizar arc progress según hitos completados
   updateNorteProgress();
+  // Persistir en Supabase
+  const hitoId = row.dataset.hitoId;
+  if (hitoId && currentUser) {
+    supa.from('hitos').update({ completado: !isDone }).eq('id', hitoId)
+      .then(({ error }) => { if (error) console.error('Error actualizando hito:', error); });
+  }
 }
 
 function updateNorteProgress() {
@@ -2790,10 +2883,30 @@ async function loadPerfilData() {
   }
 
   // Cargar logros
-  const { data: logros } = await supa
+  let { data: logros } = await supa
     .from('logros')
     .select('id, titulo, descripcion')
     .eq('user_id', currentUser.id);
+
+  // Auto-detectar logros: si hay 5+ entradas pero ningún logro aún, llamar a Gemini
+  if (lista.length >= 5 && (!logros || logros.length === 0)) {
+    const container = document.getElementById('logros-container');
+    if (container) container.innerHTML = `<p style="font-size:13px;color:var(--text-secondary);text-align:center;padding:8px 0;">✦ UP está detectando tus logros...</p>`;
+    try {
+      const { data: profileData } = await supa.from('profiles').select('norte').eq('id', currentUser.id).single();
+      const res = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo: 'detectar_logros', datos: { entradas: lista, norte: profileData?.norte } })
+      });
+      const { resultado } = await res.json();
+      if (resultado?.logros?.length) {
+        const rows = resultado.logros.map(l => ({ user_id: currentUser.id, titulo: l.titulo, descripcion: l.descripcion }));
+        const { data: inserted } = await supa.from('logros').insert(rows).select('id, titulo, descripcion');
+        if (inserted) logros = inserted;
+      }
+    } catch { /* Gemini falló — no logros aún */ }
+  }
 
   const container = document.getElementById('logros-container');
   if (container) {
