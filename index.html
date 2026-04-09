@@ -1130,59 +1130,32 @@ body {
     </style>
   </div>
 
-  <!-- ▓▓▓ S5 — CONFIRMACIÓN DE NORTE ▓▓▓ -->
-  <!-- Padding superior aumentado para separar el header del borde -->
+  <!-- ▓▓▓ S5 — PROPUESTA DE NORTE (IA) ▓▓▓ -->
   <div class="screen" id="s5">
     <div class="status-bar">
       <span class="status-time">9:41</span>
       <div class="status-icons"><svg width="17" height="12" fill="white" viewBox="0 0 17 12"><rect x="0" y="3" width="3" height="9" rx="1" opacity="0.4"/><rect x="4.5" y="2" width="3" height="10" rx="1" opacity="0.6"/><rect x="9" y="0" width="3" height="12" rx="1" opacity="0.8"/><rect x="13.5" y="0" width="3" height="12" rx="1"/></svg></div>
     </div>
     <div class="scroll-content" style="padding:32px 24px 160px;">
-      <!-- 32px padding top — aire desde el borde -->
       <div class="ai-label" style="margin-bottom:24px;">
         <div class="spark-dot"></div>
         UP encontró tu dirección.
       </div>
       <div class="card-l2" style="margin-bottom:24px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <span class="chip-objetivo">Liderazgo</span>
-          <span style="font-size:13px;color:var(--text-secondary);">3 meses</span>
+          <span id="s5-horizonte-chip" class="chip-objetivo">—</span>
         </div>
-        <p style="font-size:16px;font-weight:600;line-height:1.45;color:var(--text-primary);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">Pasar de ejecutora a gestión de equipos e iniciativas propias.</p>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:10px;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          <span style="font-size:13px;color:var(--text-secondary);">Horizonte: Q3 2026</span>
-        </div>
+        <p id="s5-norte-text" style="font-size:16px;font-weight:600;line-height:1.45;color:var(--text-primary);">✦ UP está analizando tu norte...</p>
       </div>
       <div>
         <p class="section-label">Hitos propuestos</p>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5;">Tres señales hacia ahí. Edítalos como quieras.</p>
-        <div class="hito-item">
-          <span class="hito-num">01</span>
-          <div>
-            <p class="hito-text">Liderar una iniciativa de punta a punta en el trimestre.</p>
-            <p class="hito-meta">Esta semana</p>
-          </div>
-        </div>
-        <div class="hito-item">
-          <span class="hito-num">02</span>
-          <div>
-            <p class="hito-text">Dar feedback estructurado a dos personas del equipo.</p>
-            <p class="hito-meta">Este mes</p>
-          </div>
-        </div>
-        <div class="hito-item">
-          <span class="hito-num">03</span>
-          <div>
-            <p class="hito-text">Proponer y defender una decisión estratégica ante stakeholders.</p>
-            <p class="hito-meta">Este mes</p>
-          </div>
-        </div>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5;">Generados según tu objetivo y horizonte.</p>
+        <div id="s5-hitos-container"></div>
       </div>
     </div>
     <div class="fixed-bottom over-content">
-      <button class="btn-primary has-glow" onclick="confirmarNorte()">Confirmar mi norte</button>
-      <button class="btn-ghost" style="height:52px;" onclick="goTo('s5b')">Ajustar propuesta</button>
+      <button class="btn-primary has-glow" id="s5-confirmar-btn" onclick="confirmarNorteS5()" disabled>Confirmar mi norte</button>
+      <button class="btn-ghost" style="height:52px;" onclick="irAjustarS5b()">Ajustar propuesta</button>
     </div>
   </div>
 
@@ -2359,14 +2332,52 @@ async function guardarS2() {
   goTo('s3');
 }
 
-// ── S3: guardar norte → loading → S5 ─────────────────
+// ── S3: guardar norte → loading → S5 con IA ──────────
 async function guardarS3() {
   const norte = document.getElementById('input-objetivo').value.trim();
   await guardarPerfil({ norte });
-  showLoading();
+  showLoading(norte);
 }
 
-// ── S5: guardar hitos → ir al app ────────────────────
+// ── S5: confirmar propuesta de IA directo ────────────
+async function confirmarNorteS5() {
+  if (!currentUser || !s5Data) { goTo('s6'); return; }
+  const btn = document.getElementById('s5-confirmar-btn');
+  if (btn) { btn.textContent = 'Guardando...'; btn.disabled = true; }
+
+  await guardarPerfil({ norte: s5Data.norte, horizonte: s5Data.horizonte });
+  if (s5Data.hitos?.length > 0) {
+    await supa.from('hitos').delete().eq('user_id', currentUser.id);
+    await supa.from('hitos').insert(
+      s5Data.hitos.map((texto, i) => ({ user_id: currentUser.id, texto, orden: i, completado: false }))
+    );
+  }
+  goTo('s6');
+  await loadAppData();
+}
+
+// ── S5: ir a ajustar en S5b ──────────────────────────
+function irAjustarS5b() {
+  const textarea = document.getElementById('s5b-norte-textarea');
+  if (textarea && s5Data?.norte) { textarea.value = s5Data.norte; }
+  // Pre-llenar hitos si hay propuesta
+  if (s5Data?.hitos?.length) {
+    const container = document.getElementById('hitos-ajustar-container');
+    if (container) {
+      container.innerHTML = s5Data.hitos.map((h, i) => `
+        <div class="hito-drag-row">
+          <span class="hito-check-num" style="font-size:11px;font-weight:700;color:var(--text-secondary);flex-shrink:0;min-width:20px;letter-spacing:0.04em;padding-top:2px;">${String(i+1).padStart(2,'0')}</span>
+          <input type="text" class="hito-check-text" style="flex:1;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--text-primary);outline:none;caret-color:var(--accent);padding:2px 0;" value="${h.replace(/"/g,'&quot;')}" />
+          <span class="hito-drag-handle">⠿</span>
+        </div>`).join('');
+    }
+  }
+  s5bOrigen = 'onboarding';
+  checkS5bField();
+  goTo('s5b');
+}
+
+// ── S5b: guardar hitos → ir al app ────────────────────
 async function confirmarNorte() {
   if (!currentUser) { goTo('s6'); return; }
 
@@ -2426,26 +2437,60 @@ function updateDots() {
   });
 }
 
-function showLoading() {
+// s5Data guarda la propuesta de UP para confirmarla después
+let s5Data = null;
+
+async function showLoading(norte) {
   goTo('s4');
-  setTimeout(() => {
-    // Pre-llenar S5b con el norte real que escribió el usuario en S3
-    const norte = document.getElementById('input-objetivo')?.value?.trim();
-    const textarea = document.getElementById('s5b-norte-textarea');
-    if (textarea && norte) {
-      textarea.value = norte;
-      checkS5bField();
+
+  // Llamar a Claude mientras dura la animación de carga
+  try {
+    const profile = currentUser
+      ? (await supa.from('profiles').select('role').eq('id', currentUser.id).single()).data
+      : null;
+
+    const horizonte = '3 meses'; // default onboarding
+    const res = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tipo: 'mejorar_norte',
+        datos: { objetivo: norte, rol: profile?.role, horizonte }
+      })
+    });
+
+    const { resultado } = await res.json();
+    const parsed = typeof resultado === 'object' ? resultado
+                 : (() => { try { return JSON.parse(resultado); } catch { return null; } })();
+
+    if (parsed?.objetivo && parsed?.hitos?.length) {
+      s5Data = { norte: parsed.objetivo, hitos: parsed.hitos, horizonte };
+
+      // Poblar S5 con datos reales
+      const norteEl  = document.getElementById('s5-norte-text');
+      const chipEl   = document.getElementById('s5-horizonte-chip');
+      const hitosEl  = document.getElementById('s5-hitos-container');
+      const btnEl    = document.getElementById('s5-confirmar-btn');
+
+      if (norteEl)  norteEl.textContent  = parsed.objetivo;
+      if (chipEl)   chipEl.textContent   = horizonte;
+      if (hitosEl)  hitosEl.innerHTML = parsed.hitos.map((h, i) => `
+        <div class="hito-item">
+          <span class="hito-num">${String(i+1).padStart(2,'0')}</span>
+          <div><p class="hito-text">${h}</p></div>
+        </div>`).join('');
+      if (btnEl) btnEl.disabled = false;
+
+      goTo('s5');
+      return;
     }
-    // Títulos de onboarding
-    const headerLabel = document.getElementById('s5b-header-label');
-    const title       = document.getElementById('s5b-title');
-    const subtitle    = document.getElementById('s5b-subtitle');
-    if (headerLabel) headerLabel.textContent = 'Tu norte';
-    if (title)       title.textContent       = 'Definí tu norte.';
-    if (subtitle)    subtitle.textContent    = 'Escribí tu objetivo. UP puede ayudarte a construir los hitos para llegar.';
-    s5bOrigen = 'onboarding';
-    goTo('s5b');
-  }, 2000);
+  } catch { /* si falla la IA → ir a S5b para que lo haga manualmente */ }
+
+  // Fallback: sin IA → ir a S5b pre-llenado
+  const textarea = document.getElementById('s5b-norte-textarea');
+  if (textarea && norte) { textarea.value = norte; checkS5bField(); }
+  s5bOrigen = 'onboarding';
+  goTo('s5b');
 }
 
 function checkS2Fields() {
