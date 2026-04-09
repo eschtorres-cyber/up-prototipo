@@ -1709,6 +1709,15 @@ body {
             <span style="font-size:13px;color:var(--text-secondary);">v1.5.0</span>
           </div>
         </div>
+        <!-- Reiniciar experiencia -->
+        <button id="btn-reset" onclick="reiniciarExperiencia(this)" style="
+          width:100%;height:52px;background:rgba(255,255,255,0.04);
+          border:1px solid rgba(255,255,255,0.10);border-radius:14px;
+          font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;
+          color:var(--text-secondary);cursor:pointer;margin-bottom:8px;
+          -webkit-tap-highlight-color:transparent;
+        ">Reiniciar experiencia</button>
+
         <!-- Cerrar sesión -->
         <button onclick="cerrarSesion()" style="
           width:100%;height:52px;background:rgba(239,68,68,0.08);
@@ -3207,6 +3216,41 @@ function toggleNotif(row) {
   } else {
     label.textContent = 'Recordatorio diario activo';
     showToast('Notificaciones activadas');
+  }
+}
+
+// ── Reiniciar experiencia completa ───────────────────
+async function reiniciarExperiencia(btn) {
+  if (!currentUser) return;
+  btn.textContent = 'Borrando todo...';
+  btn.style.opacity = '0.6';
+  btn.disabled = true;
+
+  try {
+    const uid = currentUser.id;
+    // Borrar todo en paralelo
+    await Promise.all([
+      supa.from('hitos').delete().eq('user_id', uid),
+      supa.from('entradas').delete().eq('user_id', uid),
+      supa.from('resumenes').delete().eq('user_id', uid),
+      supa.from('logros').delete().eq('user_id', uid),
+      supa.from('profiles').update({
+        name: null, role: null, norte: null, horizonte: null
+      }).eq('id', uid)
+    ]);
+
+    showToast('Experiencia reiniciada ✓');
+    await new Promise(r => setTimeout(r, 800));
+    // Cerrar sesión y volver al inicio
+    await supa.auth.signOut();
+    currentUser = null;
+    goTo('s1');
+  } catch (err) {
+    console.error('Error al reiniciar:', err);
+    btn.textContent = 'Reiniciar experiencia';
+    btn.style.opacity = '1';
+    btn.disabled = false;
+    showToast('Error al reiniciar. Intentá de nuevo.');
   }
 }
 
