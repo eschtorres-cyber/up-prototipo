@@ -1,16 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
-  <!-- Fondo -->
-  <rect width="180" height="180" rx="40" fill="#0a0a0b"/>
-  <!-- Glow verde sutil -->
-  <ellipse cx="90" cy="100" rx="60" ry="50" fill="rgba(22,163,74,0.15)"/>
-  <!-- Letra U -->
-  <path d="M52 52 L52 102 Q52 128 90 128 Q128 128 128 102 L128 52"
-        stroke="#16a34a" stroke-width="14" stroke-linecap="round"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Fondo negro -->
+  <rect width="512" height="512" fill="#0a0a0b"/>
+  <!-- Glow verde -->
+  <ellipse cx="256" cy="290" rx="180" ry="150" fill="rgba(22,163,74,0.12)"/>
+  <!-- U — más grande y centrada -->
+  <path d="M136 130 L136 290 Q136 382 256 382 Q376 382 376 290 L376 130"
+        stroke="#16a34a" stroke-width="42" stroke-linecap="round"
         stroke-linejoin="round" fill="none"/>
-  <!-- Flecha hacia arriba (P de "up") -->
-  <path d="M74 72 L90 52 L106 72"
-        stroke="#f0f0ee" stroke-width="11" stroke-linecap="round"
+  <!-- Flecha hacia arriba -->
+  <path d="M196 196 L256 120 L316 196"
+        stroke="#f0f0ee" stroke-width="36" stroke-linecap="round"
         stroke-linejoin="round" fill="none"/>
-  <line x1="90" y1="52" x2="90" y2="90"
-        stroke="#f0f0ee" stroke-width="11" stroke-linecap="round"/>
+  <line x1="256" y1="120" x2="256" y2="256"
+        stroke="#f0f0ee" stroke-width="36" stroke-linecap="round"/>
 </svg>
