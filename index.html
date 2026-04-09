@@ -129,34 +129,46 @@ body {
 }
 
 /* ─── MOBILE REAL + PWA STANDALONE ────────────────── */
-/* Se aplica tanto en standalone como en Safari mobile */
 @media all and (display-mode: standalone),
-       all and (max-width: 430px) {
+       all and (max-width: 768px) {
   body {
     background: #0a0a0b;
     padding: 0;
     justify-content: flex-start;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
     min-height: 100dvh;
   }
   .workspace-label { display: none; }
   .phone {
     width: 100%;
+    max-width: 100%;
+    height: 100vh;
+    height: -webkit-fill-available;
     height: 100dvh;
     border-radius: 0;
     box-shadow: none;
     flex-shrink: unset;
   }
-  /* Safe areas para iPhone 13 */
+  /* Safe areas para iPhone con notch / Dynamic Island */
   .app-bar {
-    padding-top: calc(47px + env(safe-area-inset-top, 47px));
+    padding-top: calc(47px + env(safe-area-inset-top, 0px));
   }
   .nav-bar {
-    padding-bottom: env(safe-area-inset-bottom, 34px);
-    height: calc(64px + env(safe-area-inset-bottom, 34px));
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+    height: calc(64px + env(safe-area-inset-bottom, 16px));
   }
-  /* S0 y S1 welcome: safe area en status bar */
   #s0, #s1 {
-    padding-top: env(safe-area-inset-top, 47px);
+    padding-top: env(safe-area-inset-top, 44px);
+  }
+  /* Evitar zoom automático de iOS en inputs (mín 16px) */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+  /* Scroll suave nativo en iOS */
+  .scroll-content {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
   }
 }
 
