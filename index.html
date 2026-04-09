@@ -170,6 +170,14 @@ body {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
   }
+  /* Ocultar elementos del prototipo de escritorio */
+  #screen-dots      { display: none !important; }
+  .workspace-label  { display: none !important; }
+  /* Ocultar status bar falso (9:41) — el real del iPhone lo reemplaza */
+  .status-bar       { display: none !important; }
+  /* Compensar el espacio que ocupaba el status bar falso */
+  .progress-bar-wrap { padding-top: env(safe-area-inset-top, 16px); }
+  #s1 .s1-logo, #s0 { padding-top: env(safe-area-inset-top, 44px); }
 }
 
 /* ─── PHONE SHELL ──────────────────────────────────── */
