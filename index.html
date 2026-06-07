@@ -109,6 +109,11 @@
 
 *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
 
+/* Anclar html para que dvh funcione en Safari browser mode */
+html {
+  height: 100%;
+}
+
 body {
   background: #454763;
   font-family: 'DM Sans', sans-serif;
@@ -119,7 +124,6 @@ body {
   min-height: 100vh;
   gap: 12px;
   padding: 32px 16px;
-  /* Mobile: sin cursor pointer en botones que lo necesiten via JS */
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -133,21 +137,25 @@ body {
 /* ─── MOBILE REAL + PWA STANDALONE ────────────────── */
 @media all and (display-mode: standalone),
        all and (max-width: 768px) {
+  /* Anclar toda la cadena: html → body → .phone para que dvh funcione
+     en Safari iOS browser mode (URL bar dinámica) */
+  html {
+    height: -webkit-fill-available;
+    height: 100dvh;
+    overflow: hidden;
+  }
   body {
     background: #0a0a0b;
     padding: 0;
     justify-content: flex-start;
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
-    min-height: 100dvh;
+    height: 100%;
+    overflow: hidden;
   }
   .workspace-label { display: none; }
   .phone {
     width: 100%;
     max-width: 100%;
-    height: 100vh;
-    height: -webkit-fill-available;
-    height: 100dvh;
+    height: 100%;
     border-radius: 0;
     box-shadow: none;
     flex-shrink: unset;
